@@ -210,7 +210,6 @@ def writedatumtolmdb():
       the_file.write("{}\n".format(datums[datum_id].path))
       txn.put(strid.encode("ascii"), datums[datum_id].SerializeToString())
       counter +=1
-    break
 
   print ("----------- the rest -----------------")
   sub_lines = strlines[batches*batch_size:]

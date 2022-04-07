@@ -1,29 +1,25 @@
 from utils import Hook, nested_children
-from torchvision import models
+# from torchvision import models
+from models.myresnet import myresnet18
 import torch
 import torch.nn as nn
 
 
-def getresnet18_():
+def getresnet18():
   """
   """
-  resnet18 = models.resnet18(pretrained=False, num_classes=2)
-  resnet18.conv1 = nn.Conv2d(3, 64, kernel_size=5, stride=2, padding=0,
-                               bias=False)
-  for m in resnet18.modules():
-    if isinstance(m, nn.Conv2d):
-      nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+  resnet18 = myresnet18(pretrained=False, num_classes=2)
 
   return resnet18
 
 def debugmode():
   rinput = torch.randn((1, 3, 256, 256))
-  mynet = getresnet18_()
-
+  mynet = getresnet18()
+  print (mynet)
   forwardhook = []
   for l in nested_children(mynet):
     forwardhook.append(Hook(l))
-  # print (forwardhook)
+  print (forwardhook)
   logit = mynet(rinput)
 
   for hook in forwardhook:

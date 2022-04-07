@@ -16,7 +16,6 @@ class lmdbDataset(tdata.Dataset):
     self.db_path = db_path
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
-    print (self.env.stat()["entries"])
     # debug
     # index = 23771
     # strid = "{:08}".format(index)
@@ -38,8 +37,6 @@ class lmdbDataset(tdata.Dataset):
                          readahead=False, meminit=False)
     self.txn = self.env.begin()
 
-    print(self.env.stat()["entries"])
-
   def __len__(self):
     return self.env.stat()["entries"]
 
@@ -51,21 +48,19 @@ class lmdbDataset(tdata.Dataset):
     dst = dst.reshape(self.mydatum.height, self.mydatum.width, self.mydatum.channels)
     img = Image.fromarray(dst)
     label = self.mydatum.label
-    # img = torch.FloatTensor(img)
-    # label = torch.FloatTensor(self.mydatum.label)
+    imgpath = self.mydatum.path
 
     if self.transform is not None:
       img = self.transform(img)
 
-    return img, label
+    return img, label, imgpath
 
 if __name__ == '__main__':
   transforms = T.Compose([
                           T.ToTensor()])  # 0 to 1
 
-  mydataset = lmdbDataset("/home/user/work_db/v220401_01/Test_v220401_01_SiW_1by1_260x260.db", transforms)
+  mydataset = lmdbDataset("/home/user/work_db/v220401_01/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260.db", transforms)
   trainloader = DataLoader(mydataset, batch_size=256, shuffle=True, num_workers=0, pin_memory=False)
-  for item, label in trainloader:
-    print (item.shape, label.shape)
-
-
+  for item, label, imgpath in trainloader:
+    print (item.shape, label.shape, imgpath[0])
+    break

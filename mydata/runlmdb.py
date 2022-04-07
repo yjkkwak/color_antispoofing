@@ -10,13 +10,13 @@ def main():
   baselmdb = "/home/user/work_db/v220401_01/"
   dblist = [
             "Test_v220401_01_SiW.list",
-            # "Test_v220401_01_CelebA.list",
-            # "Test_v220401_01_LD3007.list",
-            # "Test_v220401_01_LDRGB.list",
-            # "Train_v220401_01_CelebA_LDRGB_LD3007.list",
-            # "Train_v220401_01_CelebA_SiW_LD3007.list",
-            # "Train_v220401_01_CelebA_SiW_LDRGB.list",
-            # "Train_v220401_01_SiW_LDRGB_LD3007.list"
+            "Test_v220401_01_CelebA.list",
+            "Test_v220401_01_LD3007.list",
+            "Test_v220401_01_LDRGB.list",
+            "Train_v220401_01_CelebA_LDRGB_LD3007.list",
+            "Train_v220401_01_CelebA_SiW_LD3007.list",
+            "Train_v220401_01_CelebA_SiW_LDRGB.list",
+            "Train_v220401_01_SiW_LDRGB_LD3007.list"
             ]
   patchtypelist = ["1by1_260x260"]# 1by1_260x260 / 4by3_244x324
 
