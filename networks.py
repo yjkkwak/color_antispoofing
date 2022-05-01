@@ -1,6 +1,7 @@
 from utils import Hook, nested_children
 # from torchvision import models
 from models.myresnet import myresnet18
+from models.baseresnet import baseresnet18
 import torch
 import torch.nn as nn
 
@@ -12,9 +13,13 @@ def getresnet18():
 
   return resnet18
 
+def getbaseresnet18():
+  resnet18 = baseresnet18(pretrained=True)
+  return resnet18
+
 def debugmode():
   rinput = torch.randn((1, 3, 256, 256))
-  mynet = getresnet18()
+  mynet = getbaseresnet18()
   print (mynet)
   forwardhook = []
   for l in nested_children(mynet):

@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFile, ImageOps
 from multiprocessing import Pool
 
 import os
@@ -8,6 +8,7 @@ import random
 import mydatum_pb2
 import lmdb
 
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-listpath", type=str, default="/home/user/work_2022/AntiSpoofing/meta/v220401_01/Test_v220401_01_SiW.list", help='the list file recording all images')
@@ -87,11 +88,13 @@ def genXbyYcorrdinate(x, y, w, h, imgw, imgh, XbyY, imgpath):
   return 1, newx, newy, neww, newh
 
 def genpatch(imgpath):
-  pilimg = Image.open(imgpath)
   fd_path = "{}.fd".format(imgpath)
   if os.path.exists(fd_path) == False:
     # print ("{}.fd not exists".format(imgpath))
     return None
+
+  pilimg = Image.open(imgpath)
+  pilimg = ImageOps.exif_transpose(pilimg)
 
   with open(fd_path, "r") as the_file:
     strline = the_file.readline()
@@ -99,7 +102,7 @@ def genpatch(imgpath):
 
   strtokens = strline.split()
   if len(strtokens) != 4:
-    print ("fd format is not collect, do fd again {}".format(imgpath))
+    # print ("fd format is not collect, do fd again {}".format(imgpath))
     return None
   x, y, w, h = int(strtokens[0]), int(strtokens[1]), int(strtokens[2]), int(strtokens[3])
   # 256 x 256 from 260 x 260
@@ -126,7 +129,7 @@ def genpatch(imgpath):
   if "1by1" in args.patchtype:
     pilimg_1by1 = pilimg.crop([x_1by1, y_1by1, x_1by1 + w_1by1, y_1by1 + h_1by1])
     pilimg_cropresize = pilimg_1by1.resize((260, 260))
-    #pilimg_1by1.show()
+    # pilimg_1by1.show()
   elif "4by3" in args.patchtype:
     pilimg_4by3 = pilimg.crop([x_4by3, y_4by3, x_4by3 + w_4by3, y_4by3 + h_4by3])
     pilimg_cropresize = pilimg_4by3.resize((244, 324))
@@ -135,6 +138,39 @@ def genpatch(imgpath):
   npimg = np.array(pilimg_cropresize)
   return npimg
 
+def showpatch(imgpath):
+  fd_path = "{}.fd".format(imgpath)
+  if os.path.exists(fd_path) == False:
+    print ("{}.fd not exists".format(imgpath))
+    return None
+
+  pilimg = Image.open(imgpath)
+  pilimg = ImageOps.exif_transpose(pilimg)
+
+  with open(fd_path, "r") as the_file:
+    strline = the_file.readline()
+    the_file.close()
+
+  strtokens = strline.split()
+  if len(strtokens) != 4:
+    print ("fd format is not collect, do fd again {}".format(imgpath))
+    return None
+  x, y, w, h = int(strtokens[0]), int(strtokens[1]), int(strtokens[2]), int(strtokens[3])
+  # 256 x 256 from 260 x 260
+  ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "1by1", imgpath)
+  # 240 x 320 from 244 x 324
+  ecode2, x_4by3, y_4by3, w_4by3, h_4by3 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "4by3", imgpath)
+
+  if ecode1 + ecode2 < 2:
+    # print ("gen patch error code 1by1:{} 4by3:{}".format(ecode1, ecode2))
+    return None
+
+
+  draw = ImageDraw.Draw(pilimg)
+  draw.rectangle([(x,y), (x+w,y+h)], outline="red")
+  draw.rectangle([(x_1by1, y_1by1), (x_1by1 + w_1by1, y_1by1 + h_1by1)], outline="blue")
+  draw.rectangle([(x_4by3, y_4by3), (x_4by3 + w_4by3, y_4by3 + h_4by3)], outline="green")
+  pilimg.show()
 
 def genmydatum(imgpath):
   npimg = genpatch(imgpath)
@@ -148,7 +184,7 @@ def genmydatum(imgpath):
   mydatum.height = npimg.shape[0]  # im.height
   mydatum.channels = npimg.shape[2]
   mydatum.label = 0
-  if "live" in imgpath or "real" in imgpath:
+  if "live" in imgpath or "real" in imgpath or "emotion" in imgpath:
     mydatum.label = 1
   mydatum.data = npimg.tobytes()
   mydatum.path = imgpath
@@ -230,7 +266,9 @@ def writedatumtolmdb():
 
 def main():
   writedatumtolmdb()
-  # genmydatum("/home/user/data1/DBs/antispoofing/CelebA_spoofing/CelebA_Spoof/Data/Test/9727/live/529180.png")
+  #genmydatum("/home/user/data1/DBs/antispoofing/CelebA_spoofing/CelebA_Spoof/Data/Test/9727/live/529180.png")
+  # showpatch("/home/user/data1/DBs/antispoofing/CelebA_spoofing/CelebA_Spoof/Data/Test/5412/spoof/553892.png")
+  # showpatch("/home/user/data1/DBs/antispoofing/CelebA_spoofing/CelebA_Spoof/Data/Test/9727/live/529180.png")
 
 """
 comments

@@ -4,7 +4,7 @@ import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 from utils import Hook, nested_children
 
-__all__ = ['myresnet18']
+__all__ = ['baseresnet18']
 
 
 model_urls = {
@@ -139,6 +139,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
+
     def __init__(
         self,
         block: Type[Union[BasicBlock, Bottleneck]],
@@ -148,20 +149,14 @@ class ResNet(nn.Module):
         groups: int = 1,
         width_per_group: int = 64,
         replace_stride_with_dilation: Optional[List[bool]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None,
-        nuofoutputs: List[int] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None
     ) -> None:
         super(ResNet, self).__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
 
-        if nuofoutputs is None:
-          # nuofoutputs = [32, 64, 128]
-          nuofoutputs = [16, 32, 64]
-          # nuofoutputs = [8, 16, 32]
-
-        self.inplanes = nuofoutputs[0]
+        self.inplanes = 64
         self.dilation = 1
         if replace_stride_with_dilation is None:
             # each element in the tuple indicates if we should replace
@@ -172,26 +167,20 @@ class ResNet(nn.Module):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        # self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
-        #                        bias=False)
-
-        self.conv1 = nn.Conv2d(3, nuofoutputs[0], kernel_size=5, stride=2, padding=0, bias=False)
+        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
+                               bias=False)
         self.bn1 = norm_layer(self.inplanes)
-        self.relu1 = nn.ReLU(inplace=True)
-
+        self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        # previous nuofoutputs[1] --> nuofoutputs[0]
-        self.layer1 = self._make_layer(block, nuofoutputs[1], layers[0])
-        # previous nuofoutputs[1] --> nuofoutputs[0]
-        self.layer2 = self._make_layer(block, nuofoutputs[1], layers[1], stride=2,
+        self.layer1 = self._make_layer(block, 64, layers[0])
+        self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
                                        dilate=replace_stride_with_dilation[0])
-        # previous nuofoutputs[2] --> nuofoutputs[1]
-        self.layer3 = self._make_layer(block, nuofoutputs[2], layers[2], stride=2,
+        self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
                                        dilate=replace_stride_with_dilation[1])
-        self.layer4 = self._make_layer(block, nuofoutputs[2], layers[3], stride=2,
+        self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(nuofoutputs[2] * block.expansion, num_classes)
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -239,8 +228,7 @@ class ResNet(nn.Module):
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
-        x = self.relu1(x)
-
+        x = self.relu(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
@@ -258,7 +246,7 @@ class ResNet(nn.Module):
         return self._forward_impl(x)
 
 
-def _myresnet(
+def _baseresnet(
     arch: str,
     block: Type[Union[BasicBlock, Bottleneck]],
     layers: List[int],
@@ -268,18 +256,30 @@ def _myresnet(
 ) -> ResNet:
     model = ResNet(block, layers, **kwargs)
     if pretrained:
-        raise Exception("my resent do not support prerained model")
+        print ("Load! ckpt")
+        state_dict = torch.load("/home/user/work_2022/AntiSpoofing/models/resnet18-f37072fd.pth")
+        model.load_state_dict(state_dict)
+
+    model.fc = nn.Linear(model.fc.in_features, 2)
+    print ("reset linear")
     return model
 
 
-def myresnet18(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
-    return _myresnet('myresnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress,
+def baseresnet18(pretrained: bool = False, progress: bool = True, **kwargs: Any) -> ResNet:
+    r"""ResNet-18 model from
+    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
+
+    Args:
+        pretrained (bool): If True, returns a model pre-trained on ImageNet
+        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    return _baseresnet('baseresnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress,
                    **kwargs)
 
 
 def debugmode():
   rinput = torch.randn((1, 3, 256, 256))
-  mynet = myresnet18(pretrained=False, num_classes=2, nuofoutputs = [16, 32, 64])
+  mynet = baseresnet18(pretrained=True, num_classes=1000)
   print (mynet)
   forwardhook = []
   for l in nested_children(mynet):

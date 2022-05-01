@@ -8,7 +8,7 @@ from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
 
-from networks import getresnet18
+from networks import getbaseresnet18
 from lmdbdataset import lmdbDataset
 from utils import AverageMeter, accuracy, Timer, getbasenamewoext, Logger
 import os
@@ -32,7 +32,7 @@ parser.add_argument('--lmdbpath', type=str,
 parser.add_argument('--ckptpath', type=str,
                     default='/home/user/model_2022/v220419_01', help='ckpt path')
 parser.add_argument('--epochs', type=int, default=80, help='num of epochs')
-parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
+parser.add_argument('--batch_size', type=int, default=128, help='batch_size')
 parser.add_argument('--GPU', type=int, default=0, help='specify which gpu to use')
 parser.add_argument('--works', type=int, default=4, help='works')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
@@ -49,10 +49,8 @@ struuid = "{}_{}_{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.
                                                             args.gamma,
                                                             args.epochs,
                                                             args.meta)
-
-
 strckptpath = os.path.join(args.ckptpath, struuid)
-strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
+strlogpath = "/home/user/work_2022/logworkspace/baseline_resnet18pretrain_{}.log".format(struuid)
 logger = Logger(strlogpath)
 logger.print(args)
 
@@ -121,7 +119,7 @@ def trainmodel():
   averagemetermap["acc_am"] = AverageMeter()
   epochtimer = Timer()
 
-  mynet = getresnet18()
+  mynet = getbaseresnet18()
   mynet = mynet.cuda()
 
   if "260x260" in args.lmdbpath:

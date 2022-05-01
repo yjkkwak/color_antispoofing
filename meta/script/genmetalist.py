@@ -24,6 +24,9 @@ liveitems = ["/live/", "real"]
 spoofitems = ["/spoof/", "attack"]
 datakeys = {}
 
+onlylivedatapath = ["/home/user/data1/DBs/antispoofing/koran_emotion_aihub"]
+
+
 def getStatistics():
   for dbpaths in datapaths:
     for dbtypes in datatypes:
@@ -37,8 +40,27 @@ def getStatistics():
       numofspoof = len(spoofimges)
       print (numoflive, numofspoof, len(imgitmes))
 
+def getStatiscticwOnlyLivedata():
+  for dbpaths in onlylivedatapath:
+    for dbtypes in datatypes:
+      print (dbpaths, dbtypes)
+      jpgimages = glob.glob("{}/**/*.jpg".format(os.path.join(dbpaths, dbtypes)), recursive=True)
+      jpegimages = glob.glob("{}/**/*.jpeg".format(os.path.join(dbpaths, dbtypes)), recursive=True)
+      liveimages = jpgimages + jpegimages
+
+
+      print (len(jpgimages), len(jpegimages), len(liveimages))
+
+
 def gentrainlist(strver, dbtypes, datacompipaths):
   allimagelist = []
+  ###
+  with open("./../v220419_01/Train_v220419_01_Emotion.list", "r") as the_file:
+    abc = the_file.readlines()
+    the_file.close()
+  for iii in abc:
+    allimagelist.append(iii.strip())
+  ###
   dbnameconcat = ""
   for dbidxpath in datacompipaths:
     dbpaths = dbidxpath[1]
@@ -58,10 +80,16 @@ def gentrainlist(strver, dbtypes, datacompipaths):
 
     if len(liveimages) > 100000:
       random.shuffle(liveimages)
-      liveimages = liveimages[0:30000]
+      if "CelebA_Spoof" in dbpaths:
+        liveimages = liveimages[0:60000]
+      else:
+        liveimages = liveimages[0:40000]
     if len(spoofimges) > 300000:
       random.shuffle(spoofimges)
-      spoofimges = spoofimges[0:60000]
+      if "CelebA_Spoof" in dbpaths:
+        spoofimges = spoofimges[0:90000]
+      else:
+        spoofimges = spoofimges[0:70000]
 
     
     if dbpaths in datakeys.keys():
@@ -120,14 +148,53 @@ def gentestlist(strver, dbtypes, datacompipaths):
     strtrainlist = "./../{}/{}_{}{}.list".format(strver, dbtypes, strver, dbnameconcat)
     with open(strtrainlist, "w") as the_file:
       for imgpath in allimagelist:
-        the_file.write("{}\n".format(imgpath))
+        the_file.write("{}\n".format(imgpath.replace(".fd","")))
       the_file.close()
+
+def genTraintestonlylivelist(strver, dbtypes, datacompipaths):
+  for dbpaths in datacompipaths:
+    dbnameconcat = ""
+    if "emotion" in dbpaths:
+      dbnameconcat = "{}_Emotion".format(dbnameconcat)
+
+    jpgimages = glob.glob("{}/**/*.jpg.fd".format(os.path.join(dbpaths, dbtypes)), recursive=True)
+    jpegimages = glob.glob("{}/**/*.jpeg.fd".format(os.path.join(dbpaths, dbtypes)), recursive=True)
+    liveimages = jpgimages + jpegimages
+
+    print(len(liveimages), len(jpgimages), len(jpegimages), dbpaths, dbtypes)
+    allimagelist = []
+    allimagelist.extend(liveimages)
+
+    if dbtypes == "Train":
+      random.shuffle(allimagelist)
+      allimagelist = allimagelist[0:40000]
+
+    if dbtypes == "Test":
+      random.shuffle(allimagelist)
+      allimagelist = allimagelist[0:20000]
+
+    strtrainlist = "./../{}/{}_{}{}.list".format(strver, dbtypes, strver, dbnameconcat)
+    with open(strtrainlist, "w") as the_file:
+      for imgpath in allimagelist:
+        the_file.write("{}\n".format(imgpath.replace(".fd","")))
+      the_file.close()
+    return allimagelist
 
 def main():
   print ("HI")
+  genTraintestonlylivelist("v220419_01", datatypes[0], onlylivedatapath)
+  genTraintestonlylivelist("v220419_01", datatypes[1], onlylivedatapath)
+
   for datacombi in list(combinations(enumerate(datapaths), 3)):
-    gentrainlist("v220401_01", datatypes[0], datacombi)
-  #gentestlist("v220401_01", datatypes[1], datapaths)
+    gentrainlist("v220419_01", datatypes[0], datacombi)
+  gentestlist("v220419_01", datatypes[1], datapaths)
+  # getStatiscticwOnlyLivedata()
+
+  for datacombi in list(combinations(enumerate(datapaths), 4)):
+    print (datacombi)
+    gentrainlist("v220419_01", datatypes[0], datacombi)
+
+
 
 if __name__ == '__main__':
   main()

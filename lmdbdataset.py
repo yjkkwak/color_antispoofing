@@ -17,7 +17,7 @@ class lmdbDataset(tdata.Dataset):
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
     # debug
-    # index = 23771
+    # index = 1100
     # strid = "{:08}".format(index)
     # lmdb_data = self.txn.get(strid.encode("ascii"))
     # mydatum = mydatum_pb2.myDatum()
@@ -56,11 +56,15 @@ class lmdbDataset(tdata.Dataset):
     return img, label, imgpath
 
 if __name__ == '__main__':
-  transforms = T.Compose([
+  transforms = T.Compose([T.CenterCrop((320, 240)),
                           T.ToTensor()])  # 0 to 1
 
-  mydataset = lmdbDataset("/home/user/work_db/v220401_01/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260.db", transforms)
+  #mydataset = lmdbDataset("/home/user/work_db/v220401_01/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260.db", transforms)
+  mydataset = lmdbDataset("/home/user/work_db/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260.db",
+                          transforms)
   trainloader = DataLoader(mydataset, batch_size=256, shuffle=True, num_workers=0, pin_memory=False)
   for item, label, imgpath in trainloader:
     print (item.shape, label.shape, imgpath[0])
+    for iii, fff in enumerate(label):
+      print (fff, imgpath[iii])
     break
