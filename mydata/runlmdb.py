@@ -9,18 +9,21 @@ def main():
   basemeta = "/home/user/work_2022/AntiSpoofing/meta/v220419_01/"
   baselmdb = "/home/user/work_db/v220419_01/"
   dblist = [
-            "Train_v220419_01_SiW_LDRGB_LD3007.list",
+            "Train_v220419_01_OULUNPU.list",
+            # "Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU.list",
+            # "Train_v220419_01_SiW_LDRGB_LD3007.list",
             # "Train_v220419_01_CelebA_LDRGB_LD3007.list",
             # "Train_v220419_01_CelebA_SiW_LD3007.list",
             # "Train_v220419_01_CelebA_SiW_LDRGB.list",
-            "Test_v220419_01_Emotion.list",
-            "Test_v220419_01_SiW.list",
-            "Test_v220419_01_CelebA.list",
-            "Test_v220419_01_LD3007.list",
-            "Test_v220419_01_LDRGB.list",
-            "Train_v220419_01_CelebA_SiW_LDRGB_LD3007.list"
+            # "Dev_v220419_01_OULUNPU.list",
+            # "Test_v220419_01_Emotion.list",
+            # "Test_v220419_01_SiW.list",
+            # "Test_v220419_01_CelebA.list",
+            # "Test_v220419_01_LD3007.list",
+            # "Test_v220419_01_LDRGB.list",
+            # "Train_v220419_01_CelebA_SiW_LDRGB_LD3007.list"
             ]
-  patchtypelist = ["4by3_244x324"]#, "4by3_244x324"]# 1by1_260x260 / 4by3_244x324
+  patchtypelist = ["1by1_260x260"]#, "4by3_244x324"]# 1by1_260x260 / 4by3_244x324
 
   for dbitem in dblist:
     for patchitem in patchtypelist:

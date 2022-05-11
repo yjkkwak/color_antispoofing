@@ -10,7 +10,7 @@ from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
 
-from networks import getresnet18
+from networks import getresnet18, getbaseresnet18
 from lmdbdataset import lmdbDataset
 from utils import AverageMeter, accuracy, getbasenamewoext, genfarfrreer, gentprwonlylive
 import os
@@ -48,7 +48,7 @@ def testmodel(epoch, model, testdbpath, strckptpath):
   testdataset = lmdbDataset(testdbpath, transforms)
 
   # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=64, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   probsm = nn.Softmax(dim=1)
@@ -78,6 +78,7 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
 
   if model is None:
     model = getresnet18()
+    # model = getbaseresnet18()
     model = model.cuda()
 
   checkpoint = torch.load(strckptfilepath)
@@ -101,7 +102,7 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
   testdataset = lmdbDataset(testdbpath, transforms)
 
   # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=512, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=64, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   probsm = nn.Softmax(dim=1)
@@ -142,37 +143,33 @@ if __name__ == '__main__':
   #               "/home/user/work_db/v220401_01/Test_v220401_01_LD3007_1by1_260x260.db",
   #               "/home/user/work_db/v220401_01/Test_v220401_01_LDRGB_1by1_260x260.db"]
 
-  testdblist = ["/home/user/work_db/v220401_01/Test_v220401_01_Emotion_1by1_260x260.db"]
+  # testdblist = ["/home/user/work_db/v220419_01/Dev_v220419_01_OULUNPU_1by1_260x260.db"]
+  testdblist = ["/home/user/work_db/v220419_01/Dev_v220419_01_OULUNPU_4by3_244x324.db"]
 
-  # basepathlist = ["/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_4by3_244x324_220415_4RnkqoXCLC7kjswpQ7jU5j_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-  #             "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_4by3_244x324_220415_9JK2EGmzAk4hgnseEPZ8Ck_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LD3007_4by3_244x324_220415_3FyDQrrgwjuRnD29YTPL4A_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LDRGB_4by3_244x324_220415_deXTJvMBCriiGtKuGkuA7Q_lr0.01_gamma_0.92_epochs_80_meta_163264/",]
 
-  # basepathlist = ["/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_4by3_244x324_220412_eMedm6ND2sMEnU9wexbjCq_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LD3007_4by3_244x324_220412_krSNtfNzMMAqdMSeM4kmn4_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LDRGB_4by3_244x324_220412_YEYEhPmvRPogm2fnjvJvHR_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_4by3_244x324_220411_ARtFWpc23jBnAaSMLSc55h_lr0.01_gamma_0.92/",]
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_3uKCX7S9pwbeSTzoTydcgV_lr0.005_gamma_0.92_epochs_80_meta_163264/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_dV2jCRRuqv6mLnEbgSXFxr_lr0.01_gamma_0.92_epochs_80_meta_163264/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220503_GsjdPMhgcCrnGPwLiFoJaq_lr0.001_gamma_0.92_epochs_80_meta_163264/
+  #
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_ASjbjf4YXyMBocMLJEFhbS_lr0.01_gamma_0.92_epochs_80_meta_baselineres18/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_Pn2ww7BGgZGmhJD5oeG2L6_lr0.005_gamma_0.92_epochs_80_meta_baselineres18/
 
-  # basepathlist = ["/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260_220408_nB8VRKkTsBdxgUVeKQyqcD_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LD3007_1by1_260x260_220408_eSCEpkTvFk8aYoTn6RvgKt_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LDRGB_1by1_260x260_220408_6rAWNVCK3S72YS9svYtUrC_lr0.01_gamma_0.92/",
-  #             "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_1by1_260x260_220408_6ihoYoTHFkRdiLQcin3CNL_lr0.01_gamma_0.92/",]
-
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_Ta43xeVVCksdcchrX8hDkb_lr0.01_gamma_0.92_epochs_80_meta_163264/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_UNnaHEdifqijaML6w6uS3W_lr0.005_gamma_0.92_epochs_80_meta_163264/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_eNeMv72oynyYhUikgY4mbv_lr0.001_gamma_0.92_epochs_80_meta_163264/
+  # /home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220505_edzapQSW8VwscSyfxJjcZr_lr0.005_gamma_0.92_epochs_80_meta_baselineres18/
   basepathlist = [
-    "/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260_220414_Rc3qebxDSvyocY4uCgcEKb_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-    "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LD3007_1by1_260x260_220414_gXyb3RBNDU7pPVQjwt7KUw_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-    "/home/user/model_2022/Train_v220401_01_CelebA_SiW_LDRGB_1by1_260x260_220414_dnNzDP4dF5PX9gfrfGg3dq_lr0.01_gamma_0.92_epochs_80_meta_163264/",
-    "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_1by1_260x260_220414_HDZCuMsB2eriabbcwYkRC5_lr0.01_gamma_0.92_epochs_80_meta_163264/", ]
+    "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_eNeMv72oynyYhUikgY4mbv_lr0.001_gamma_0.92_epochs_80_meta_163264/", ]
 
   for basepath in basepathlist:
     ckptlist = glob.glob("{}/**/*.ckpt".format(basepath), recursive=True)
     for ckptpath in ckptlist:
       for testdbpath in testdblist:
         ffff = getbasenamewoext(ckptpath)
-        if int(ffff[-2:]) > 60:
+        if int(ffff[-2:]) > 58:
           print (ffff)
           testwckpt(None,
                     ckptpath,
                     testdbpath,
                     basepath)
+

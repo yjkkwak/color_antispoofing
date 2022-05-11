@@ -76,7 +76,10 @@ def accuracy(output, target, topk=(1,)):
 class Logger(object):
   '''Save training process to log file with simple plot function.'''
   def __init__(self, fpath):
-    self.file = open(fpath, "w")
+    if os.path.exists(fpath):
+      self.file = open(fpath, "a")
+    else:
+      self.file = open(fpath, "w")
 
   def print(self, strlog):
     self.file.write("{}\n".format(strlog))
@@ -186,12 +189,6 @@ def genfarfrreerwthlist(scorefile):
     eer = (frr + far) / 2.0
     print("acc {:0.2} / tpr {:0.2} at far {:0.2} / eer {:0.2} thr {:0.2}".format(acc, tpr, far, eer, thre[i]))
 
-def find_nearest(array, value):
-  array = np.asarray(array)
-  idx = (np.abs(array - value)).argmin()
-  return idx
-
-
 def gentprwonlylive(scorefile):
   # https://cambridge-archive.blogspot.com/2014/04/frr-far-tpr-fpr-roc-curve-acc-spc-ppv.html
   npscore = readscore(scorefile)
@@ -264,9 +261,6 @@ def genfarfrreer(scorefile):
 
 
   # interpolation.. soon
-  # index1 = find_nearest(FAR, 0.01)#1/100
-  # index2 = find_nearest(FAR, 0.001)#1/1000
-  #index3 = find_nearest(FAR, 0.0001)  # 1/10000
   inter_tprwfar = interpolate.interp1d(FAR, TPR, fill_value='extrapolate')
   inter_tprwthr = interpolate.interp1d(THR, TPR, fill_value='extrapolate')
   inter_eerwthr = interpolate.interp1d(THR, EER, fill_value='extrapolate')
@@ -387,12 +381,13 @@ if __name__ == '__main__':
 # genstatistics("/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260_220418_gFTGsedAJb3AHLNRvdd3QT_lr0.01_gamma_0.92_epochs_80_meta_81632/")
 
 
-  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_1by1_260x260_220426_jxPZsSosrG74wGbHPLUGx7_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LD3007_1by1_260x260_220426_mSPpqAqijQ3TqPwBitQiXU_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_SiW_LDRGB_LD3007_1by1_260x260_220426_kHBMKMhzvVLQfhr9PzNKYN_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260_220426_QsZWrwa2nvkHM6zeWDB22E_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_1by1_260x260_220430_fDUqAt85BiRUwsYZA9KjX6_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LD3007_1by1_260x260_220430_AgzaX9dW69E5Kd5pshJWhi_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_SiW_LDRGB_LD3007_1by1_260x260_220430_K5hNGp5vRZR9v7tPXHz4xf_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260_220430_DyM4Gfzo8FGqsXmLzJPudN_lr0.01_gamma_0.92_epochs_80_meta_163264/")
 
-  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_4by3_244x324_220428_hodLA65ACbhqdmoskaxkDU_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LD3007_4by3_244x324_220428_CCv57LcKKXNgXHrDU39gJh_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_SiW_LDRGB_LD3007_4by3_244x324_220428_EFZa9Q2N86YbeiD84BhmaP_lr0.01_gamma_0.92_epochs_80_meta_163264/")
-  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_4by3_244x324_220428_bZk6d9MFvUVgmUkkcKCdo4_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_dV2jCRRuqv6mLnEbgSXFxr_lr0.01_gamma_0.92_epochs_80_meta_163264/")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_3uKCX7S9pwbeSTzoTydcgV_lr0.005_gamma_0.92_epochs_80_meta_163264")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_ASjbjf4YXyMBocMLJEFhbS_lr0.01_gamma_0.92_epochs_80_meta_baselineres18/")
+  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_Pn2ww7BGgZGmhJD5oeG2L6_lr0.005_gamma_0.92_epochs_80_meta_baselineres18")

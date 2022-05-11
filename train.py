@@ -38,6 +38,7 @@ parser.add_argument('--works', type=int, default=4, help='works')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
 parser.add_argument('--gamma', type=float, default=0.97, help='gamma for scheduler')
 parser.add_argument('--meta', type=str, default='meta', help='meta')
+parser.add_argument('--resume', type=str, default='', help='resume path')
 
 args = parser.parse_args()
 
@@ -50,12 +51,15 @@ struuid = "{}_{}_{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.
                                                             args.epochs,
                                                             args.meta)
 
+if args.resume != "":
+  print ("resume !!!")
+  resumedir = os.path.dirname(args.resume)
+  struuid = os.path.basename(resumedir)
 
 strckptpath = os.path.join(args.ckptpath, struuid)
 strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
 logger = Logger(strlogpath)
 logger.print(args)
-
 
 dbprefix = "/home/user/work_db/v220419_01"
 if "260x260" in args.lmdbpath:
@@ -63,13 +67,15 @@ if "260x260" in args.lmdbpath:
                 os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
                 os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
                 os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db")]
+                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
+                os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_1by1_260x260.db")]
 elif "244x324" in args.lmdbpath:
   testdblist = [os.path.join(dbprefix, "Test_v220419_01_CelebA_4by3_244x324.db"),
                 os.path.join(dbprefix, "Test_v220419_01_LD3007_4by3_244x324.db"),
                 os.path.join(dbprefix, "Test_v220419_01_LDRGB_4by3_244x324.db"),
                 os.path.join(dbprefix, "Test_v220419_01_SiW_4by3_244x324.db"),
-                os.path.join(dbprefix, "Test_v220419_01_Emotion_4by3_244x324.db")]
+                os.path.join(dbprefix, "Test_v220419_01_Emotion_4by3_244x324.db"),
+                os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_4by3_244x324.db")]
 
 def save_ckpt(epoch, net, optimizer):
   if os.path.exists(strckptpath) == False:
@@ -136,7 +142,6 @@ def trainmodel():
 
   traindataset = lmdbDataset(args.lmdbpath, transforms)
 
-
   logger.print(mynet)
   logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
@@ -147,7 +152,16 @@ def trainmodel():
   # ExponentialLR, LamdaLR same iof gamma is simple
   scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.gamma)
 
-  for epoch in range(args.epochs):
+  startepoch = 0
+  if args.resume != "":
+    logger.print("Resume from {}".format(args.resume))
+    checkpoint = torch.load(args.resume)
+    mynet.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    startepoch = checkpoint['epoch'] + 1
+
+
+  for epoch in range(startepoch, args.epochs):
     mynet.train()
     epochtimer.tic()
     trainepoch(epoch, trainloader, mynet, criterion, optimizer, averagemetermap)

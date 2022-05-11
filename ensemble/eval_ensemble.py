@@ -15,17 +15,15 @@ def getscorewsortbypath(strsocrepath):
   scorelist = sorted(scorelist, key = lambda x:x[2])
   return scorelist
 
-def ensemble_scores():
+def ensemble_scores(db1, db2):
+  spath1 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_3uKCX7S9pwbeSTzoTydcgV_lr0.005_gamma_0.92_epochs_80_meta_163264/{}/78.score".format(db1)
+  spath2 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_eNeMv72oynyYhUikgY4mbv_lr0.001_gamma_0.92_epochs_80_meta_163264/{}/69.score".format(db2)
 
-  #spath1 = "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_1by1_260x260_220414_HDZCuMsB2eriabbcwYkRC5_lr0.01_gamma_0.92_epochs_80_meta_163264/Test_v220401_01_Emotion_1by1_260x260/68.score"
-  spath1 = "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_4by3_244x324_220415_9JK2EGmzAk4hgnseEPZ8Ck_lr0.01_gamma_0.92_epochs_80_meta_163264/Test_v220401_01_Emotion_4by3_244x324/79.score"
-  spath2 = "/home/user/model_2022/Train_v220401_01_SiW_LDRGB_LD3007_4by3_244x324_220415_9JK2EGmzAk4hgnseEPZ8Ck_lr0.01_gamma_0.92_epochs_80_meta_163264/Test_v220401_01_Emotion_4by3_244x324/72.score"
   scorelist1 = getscorewsortbypath(spath1)
   scorelist2 = getscorewsortbypath(spath2)
 
-  wsum_score = []
-  wlist = [0.3, 0.7]
-  the_file = open("./tmpfile.txt", "w")
+  wlist = [0.5, 0.5]
+  the_file = open("./{}{}.txt".format(db1, db2), "w")
   for item in zip(scorelist1, scorelist2):
     fakescore = wlist[0]*float(item[0][0]) + wlist[1]*float(item[1][0])
     livescore = wlist[0] * float(item[0][1]) + wlist[1] * float(item[1][1])
@@ -35,28 +33,19 @@ def ensemble_scores():
 
   genfarfrreerwthlist(spath1)
   genfarfrreerwthlist(spath2)
-  genfarfrreerwthlist("./tmpfile.txt")
+  genfarfrreerwthlist("./{}{}.txt".format(db1, db2))
 
 
 
 
 def getbasemodels():
-  ensemble_scores()
-  return
-  baesdblist = ["CelebA_LDRGB_LD3007",
-            #"CelebA_SiW_LD3007",
-            #"CelebA_SiW_LDRGB",
-            #"SiW_LDRGB_LD3007",
-                ]
+  # ensemble_scores("Test_v220419_01_CelebA_1by1_260x260", "Test_v220419_01_CelebA_4by3_244x324")
+  # ensemble_scores("Test_v220419_01_LD3007_1by1_260x260", "Test_v220419_01_LD3007_4by3_244x324")
+  # ensemble_scores("Test_v220419_01_LDRGB_1by1_260x260", "Test_v220419_01_LDRGB_4by3_244x324")
+  #ensemble_scores("Test_v220419_01_SiW_1by1_260x260", "Test_v220419_01_SiW_4by3_244x324")
+  #ensemble_scores("Dev_v220419_01_OULUNPU_1by1_260x260", "Dev_v220419_01_OULUNPU_4by3_244x324")
 
-  basepatchlist = ["1by1_260x260",
-               "4by3_244x324"]
-
-  basemodellist = []
-  for basedb in baesdblist:
-    for basepatch in basepatchlist:
-      basemodellist.append("{}_{}".format(basedb, basepatch))
-  print (basemodellist)
+  ensemble_scores("Test_v220419_01_Emotion_1by1_260x260", "Test_v220419_01_Emotion_4by3_244x324")
 
 
 if __name__ == '__main__':

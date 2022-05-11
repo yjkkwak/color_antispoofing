@@ -56,11 +56,11 @@ class lmdbDataset(tdata.Dataset):
     return img, label, imgpath
 
 if __name__ == '__main__':
-  transforms = T.Compose([T.CenterCrop((320, 240)),
+  transforms = T.Compose([T.CenterCrop((256, 256)),
                           T.ToTensor()])  # 0 to 1
 
   #mydataset = lmdbDataset("/home/user/work_db/v220401_01/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260.db", transforms)
-  mydataset = lmdbDataset("/home/user/work_db/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260.db",
+  mydataset = lmdbDataset("/home/user/work_db/v220419_01/Dev_v220419_01_OULUNPU_1by1_260x260.db/",
                           transforms)
   trainloader = DataLoader(mydataset, batch_size=256, shuffle=True, num_workers=0, pin_memory=False)
   for item, label, imgpath in trainloader:
