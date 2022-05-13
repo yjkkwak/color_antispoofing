@@ -35,25 +35,43 @@ def checkwh(strpath):
     if h > w:
       print (fpath, h, w, c)
 
-
-
-
-
 def main():
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Anger/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Embarrass/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Happy/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Nutral/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Sad/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Unrest/")
-  # renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Wound/")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Anger_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Embarrass_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Happy_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Nutral_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Sad_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Unrest_01")
-  renamefile("/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Train/Train_Wound_01")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Anger_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Anxious_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Embarrassed_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Happy_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Hurt_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Neutral_VALID/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Validation/EMOIMG_Sad_VALID/")
+
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anger_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anger_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anger_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anger_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anxious_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anxious_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anxious_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Anxious_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Embarrassed_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Embarrassed_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Embarrassed_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Embarrassed_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Happy_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Happy_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Happy_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Happy_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Hurt_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Hurt_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Hurt_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Hurt_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Neutral_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Neutral_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Neutral_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Neutral_TRAIN_04/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Sad_TRAIN_01/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Sad_TRAIN_02/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Sad_TRAIN_03/")
+  renamefile("/home/user/data1/DBs/AIHUB/Emotion/Training/EMOIMG_Sad_TRAIN_04/")
 
 
 if __name__ == '__main__':
