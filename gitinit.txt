@@ -1,6 +1,6 @@
-  900  git remote add master https://github.com/yjkkwak/color_antispoofing.git
-  901  git remote -v
-  902  git push master
-  903  git push --set-upstream master master
-  904  git branch
-
+git remote add master https://github.com/yjkkwak/color_antispoofing.git
+git remote -v
+git push master
+git push --set-upstream master master
+git branch
+git config --global credential.helper store
