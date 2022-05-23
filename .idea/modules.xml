@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/AntiSpoofing.iml" filepath="$PROJECT_DIR$/.idea/AntiSpoofing.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" filepath="$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../testbed/.idea/testbed.iml" filepath="$PROJECT_DIR$/../testbed/.idea/testbed.iml" />
     </modules>
   </component>
 </project>
