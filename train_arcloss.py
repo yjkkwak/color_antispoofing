@@ -8,13 +8,14 @@ from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
 
-from networks import getresnet18
+from networks import getmetricresnet18
+from mylosses import ArcMarginProduct, AddMarginProduct
 from lmdbdataset import lmdbDataset
 from utils import AverageMeter, accuracy, Timer, getbasenamewoext, Logger
 import os
 import shortuuid
 from datetime import datetime
-from test import testmodel
+from test import testmetricmodel
 from shutil import copyfile
 
 random_seed = 20220406
@@ -28,24 +29,26 @@ random.seed(random_seed)
 
 parser = argparse.ArgumentParser(description='anti-spoofing training')
 parser.add_argument('--lmdbpath', type=str,
-                    default='/home/user/work_db/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260.db', help='db path')
+                    default='/home/user/work_db/v220419_01/Train_v220419_01_OULUNPU_1by1_260x260.db', help='db path')
 parser.add_argument('--ckptpath', type=str,
-                    default='/home/user/model_2022/v220419_01', help='ckpt path')
+                    default='/home/user/model_2022/v220513_01/', help='ckpt path')
 parser.add_argument('--epochs', type=int, default=80, help='num of epochs')
 parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-parser.add_argument('--GPU', type=int, default=0, help='specify which gpu to use')
+parser.add_argument('--GPU', type=int, default=1, help='specify which gpu to use')
 parser.add_argument('--works', type=int, default=4, help='works')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
 parser.add_argument('--gamma', type=float, default=0.97, help='gamma for scheduler')
 parser.add_argument('--meta', type=str, default='meta', help='meta')
 parser.add_argument('--resume', type=str, default='', help='resume path')
+parser.add_argument('--w1', type=float, default=0.0, help='arc loss weight')
 
 args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU 2 to use
-struuid = "{}_{}_{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
+struuid = "{}_{}_{}_bsize{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
                                                             datetime.now().strftime("%y%m%d"),
                                                             shortuuid.uuid(),
+                                                            args.batch_size,
                                                             args.lr,
                                                             args.gamma,
                                                             args.epochs,
@@ -64,22 +67,22 @@ logger.print(args)
 dbprefix = "/home/user/work_db/v220419_01"
 if "260x260" in args.lmdbpath:
   testdblist = [
-                os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
+                # os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
+                # os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
                 os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_1by1_260x260.db")]
 elif "244x324" in args.lmdbpath:
   testdblist = [
-                # os.path.join(dbprefix, "Test_v220419_01_CelebA_4by3_244x324.db"),
+                os.path.join(dbprefix, "Test_v220419_01_CelebA_4by3_244x324.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_LD3007_4by3_244x324.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_LDRGB_4by3_244x324.db"),
-                # os.path.join(dbprefix, "Test_v220419_01_SiW_4by3_244x324.db"),
+                os.path.join(dbprefix, "Test_v220419_01_SiW_4by3_244x324.db"),
                 # os.path.join(dbprefix, "Test_v220419_01_Emotion_4by3_244x324.db"),
                 os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_4by3_244x324.db")]
 
-def save_ckpt(epoch, net, optimizer):
+def save_ckpt(epoch, net, metricnet, optimizer):
   if os.path.exists(strckptpath) == False:
     os.makedirs(strckptpath)
   strpath = "{}/epoch_{:02d}.ckpt".format(strckptpath, epoch)
@@ -87,10 +90,11 @@ def save_ckpt(epoch, net, optimizer):
   torch.save({
     'epoch': epoch,
     'model_state_dict': net.state_dict(),
+    'metricmodel_state_dict': metricnet.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
   }, strpath)
 
-def trainepoch(epoch, trainloader, model, criterion, optimizer, averagemetermap):
+def trainepoch(epoch, trainloader, model, mymetric, criterion, optimizer, averagemetermap):
   #_t['forward_pass'].tic()
   fbtimer = Timer()
   totaliter = len(trainloader)
@@ -99,21 +103,30 @@ def trainepoch(epoch, trainloader, model, criterion, optimizer, averagemetermap)
     fbtimer.tic()
     images, labels = images.cuda(), labels.cuda()
     optimizer.zero_grad()
-    logit = model(images)
+    logit, fc5 = model(images)
+    metricfc5 = mymetric(fc5, labels)
     # prob = probsm(logit)
-    loss = criterion(logit, labels)
+    logitloss = criterion(logit, labels)
+    metircloss = criterion(metricfc5, labels)
+    loss = logitloss + args.w1 * metircloss
     acc = accuracy(logit, labels)
     loss.backward()
     optimizer.step()
     averagemetermap["loss_am"].update(loss.item())
+    averagemetermap["loss_logit"].update(logitloss.item())
+    averagemetermap["loss_metric"].update(metircloss.item())
+
+
     averagemetermap["acc_am"].update(acc[0].item())
     if index % 10 == 0:
       fbtimer.toc()
-      strprint = "  {}/{} at {}/{} loss:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(index,
+      strprint = "  {}/{} at {}/{} loss:{:.5f} loss_l:{:.5f} loss_m:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(index,
                                                                                      totaliter,
                                                                                      epoch,
                                                                                      args.epochs,
                                                                                      averagemetermap["loss_am"].avg,
+                                                                                     averagemetermap["loss_logit"].avg,
+                                                                                     averagemetermap["loss_metric"].avg,
                                                                                      averagemetermap["acc_am"].avg,
                                                                                      optimizer.param_groups[0]['lr'],
                                                                                      fbtimer.average_time)
@@ -126,11 +139,15 @@ def trainmodel():
   """
   averagemetermap = {}
   averagemetermap["loss_am"] = AverageMeter()
+  averagemetermap["loss_logit"] = AverageMeter()
+  averagemetermap["loss_metric"] = AverageMeter()
   averagemetermap["acc_am"] = AverageMeter()
   epochtimer = Timer()
 
-  mynet = getresnet18()
+  mynet = getmetricresnet18()
+  mymetric = ArcMarginProduct(64, 2, s=30, m=0.5, easy_margin=False)
   mynet = mynet.cuda()
+  mymetric = mymetric.cuda()
 
   if "260x260" in args.lmdbpath:
     transforms = T.Compose([T.RandomCrop((256, 256)),
@@ -145,10 +162,13 @@ def trainmodel():
   traindataset = lmdbDataset(args.lmdbpath, transforms)
 
   logger.print(mynet)
+  logger.print(mymetric)
   logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
   criterion = nn.CrossEntropyLoss().cuda()
-  optimizer = optim.Adam(mynet.parameters(), lr=args.lr, weight_decay=1e-4)
+  #optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr, weight_decay=1e-4)
+  optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
+                         weight_decay=5e-4)
   # https://gaussian37.github.io/dl-pytorch-lr_scheduler/
   # https://sanghyu.tistory.com/113
   # ExponentialLR, LamdaLR same iof gamma is simple
@@ -159,6 +179,7 @@ def trainmodel():
     logger.print("Resume from {}".format(args.resume))
     checkpoint = torch.load(args.resume)
     mynet.load_state_dict(checkpoint['model_state_dict'])
+    mymetric.load_state_dict(checkpoint['metricmodel_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     startepoch = checkpoint['epoch'] + 1
 
@@ -166,16 +187,16 @@ def trainmodel():
   for epoch in range(startepoch, args.epochs):
     mynet.train()
     epochtimer.tic()
-    trainepoch(epoch, trainloader, mynet, criterion, optimizer, averagemetermap)
+    trainepoch(epoch, trainloader, mynet, mymetric, criterion, optimizer, averagemetermap)
     epochtimer.toc()
     strprint = "{}/{} loss:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(epoch, args.epochs, averagemetermap["loss_am"].avg, averagemetermap["acc_am"].avg, optimizer.param_groups[0]['lr'], epochtimer.average_time)
     logger.print (strprint)
     scheduler.step()
-    save_ckpt(epoch, mynet, optimizer)
+    save_ckpt(epoch, mynet, mymetric, optimizer)
 
     if epoch > 0:
       for testdbpath in testdblist:
-        testmodel(epoch, mynet, testdbpath, strckptpath)
+        testmetricmodel(epoch, mynet, testdbpath, strckptpath)
 
 
 if __name__ == '__main__':
