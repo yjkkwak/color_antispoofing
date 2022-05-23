@@ -16,37 +16,52 @@ def sendjobs(dbtype):
 
 
 def sendarclossjobs(dbtype):
-  strbaseckpt = "/home/user/model_2022/v220513_01/"
+  strbaseckpt = "/home/user/model_2022/v220419_02/"
   strpython = "python -u /home/user/work_2022/AntiSpoofing/train_arcloss.py"
-  strlogoption = "log_{}_arclossmeta163264".format(dbtype)
 
-  nepoch=31
-  screenoption = "screen -L -Logfile {}{}{}{}gpu0_w0.0.txt -d -m ".format(strlogoption, "Arcloss_OULUNPU", "_lr0.005", "_e{}_bsize{}".format(nepoch, 512))
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --batch_size 512 --ckptpath {} --lmdbpath {} --gamma 0.90 --epochs {} --meta arcloss163264_w0.0 --GPU 0 --lr 0.005 --w1 0.0".format(screenoption,
-                                                                                                 strpython, strbaseckpt, lmdbpath, nepoch)
+  strgamma = 0.90
+  nepoch=81
+  strbsize = 512
+  strgpu = 2
+  strw1 = 0.0
+  stropti = "Adam"
+  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
+                                                stropti,
+                                                "Arcloss",
+                                                "lr0.005",
+                                                "gamma{}".format(strgamma),
+                                                "e{}".format(nepoch),
+                                                "bsize{}".format(strbsize),
+                                                "gpu{}".format(strgpu),
+                                                "w{}".format(strw1))
+  strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
+  screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
+  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
   os.system(strcmd)
 
-  screenoption = "screen -L -Logfile {}{}{}{}gpu1_w0.1.txt -d -m ".format(strlogoption, "Arcloss_OULUNPU", "_lr0.005", "_e{}_bsize{}".format(nepoch, 512))
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --batch_size 512 --ckptpath {} --lmdbpath {} --gamma 0.90 --epochs {} --meta arcloss163264_w0.1 --GPU 1 --lr 0.005 --w1 0.2".format(screenoption,
-                                                                                                 strpython, strbaseckpt, lmdbpath, nepoch)
+
+  strgpu = 3
+  strw1 = 1.0
+  stropti = "Adam"
+  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
+                                                stropti,
+                                                "Arcloss",
+                                                "lr0.005",
+                                                "gamma{}".format(strgamma),
+                                                "e{}".format(nepoch),
+                                                "bsize{}".format(strbsize),
+                                                "gpu{}".format(strgpu),
+                                                "w{}".format(strw1))
+  strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
+  screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
+  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
   os.system(strcmd)
 
-  screenoption = "screen -L -Logfile {}{}{}{}gpu2_w0.5.txt -d -m ".format(strlogoption, "Arcloss_OULUNPU", "_lr0.005", "_e{}_bsize{}".format(nepoch, 512))
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --batch_size 512 --ckptpath {} --lmdbpath {} --gamma 0.90 --epochs {} --meta arcloss163264_w0.5 --GPU 2 --lr 0.005 --w1 0.5".format(
-    screenoption,
-    strpython, strbaseckpt, lmdbpath, nepoch)
-  os.system(strcmd)
-
-  screenoption = "screen -L -Logfile {}{}{}{}gpu3_w1.0.txt -d -m ".format(strlogoption, "Arcloss_OULUNPU", "_lr0.005", "_e{}_bsize{}".format(nepoch, 512))
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --batch_size 512 --ckptpath {} --lmdbpath {} --gamma 0.90 --epochs {} --meta arcloss163264_w1.0 --GPU 3 --lr 0.005 --w1 1.0".format(
-    screenoption,
-    strpython, strbaseckpt, lmdbpath, nepoch)
-  os.system(strcmd)
 
 if __name__ == '__main__':
-  sendjobs("1by1_260x260")
-  # sendarclossjobs("1by1_260x260")
+  # sendjobs("1by1_260x260")
+  sendarclossjobs("1by1_260x260")

@@ -43,9 +43,10 @@ parser.add_argument('--resume', type=str, default='', help='resume path')
 args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU 2 to use
-struuid = "{}_{}_{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
+struuid = "{}_{}_{}_bsize{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
                                                             datetime.now().strftime("%y%m%d"),
                                                             shortuuid.uuid(),
+                                                            args.batch_size,
                                                             args.lr,
                                                             args.gamma,
                                                             args.epochs,
