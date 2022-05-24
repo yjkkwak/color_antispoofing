@@ -134,11 +134,11 @@ def trainmodel():
 
   if "260x260" in args.lmdbpath:
     transforms = T.Compose([T.RandomCrop((256, 256)),
-                            T.RandomVerticalFlip(),
+                            T.RandomHorizontalFlip(),
                             T.ToTensor()])  # 0 to 1
   elif "244x324" in args.lmdbpath:
     transforms = T.Compose([T.RandomCrop((320, 240)),
-                            T.RandomVerticalFlip(),
+                            T.RandomHorizontalFlip(),
                             T.ToTensor()])  # 0 to 1
 
 

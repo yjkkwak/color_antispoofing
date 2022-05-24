@@ -19,12 +19,12 @@ def sendarclossjobs(dbtype):
   strbaseckpt = "/home/user/model_2022/v220419_02/"
   strpython = "python -u /home/user/work_2022/AntiSpoofing/train_arcloss.py"
 
-  strgamma = 0.90
+  strgamma = 0.92
   nepoch=81
   strbsize = 512
-  strgpu = 2
+  strgpu =0 
   strw1 = 0.0
-  stropti = "Adam"
+  stropti = "SGD"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                 stropti,
                                                 "Arcloss",
@@ -42,9 +42,9 @@ def sendarclossjobs(dbtype):
   os.system(strcmd)
 
 
-  strgpu = 3
+  strgpu =1 
   strw1 = 1.0
-  stropti = "Adam"
+  stropti = "SGD"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                 stropti,
                                                 "Arcloss",

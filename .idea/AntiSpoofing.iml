@@ -6,5 +6,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Pytorch_Retinaface" />
     <orderEntry type="module" module-name="testbed" />
+    <orderEntry type="module" module-name="SSAN" />
+    <orderEntry type="module" module-name="Paper_AntiSpoofing" />
   </component>
 </module>

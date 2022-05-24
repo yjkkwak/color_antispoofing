@@ -67,11 +67,11 @@ logger.print(args)
 dbprefix = "/home/user/work_db/v220419_01"
 if "260x260" in args.lmdbpath:
   testdblist = [
-                os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
+#                os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
+#                os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
+#                os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
+#                os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
+#                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
                 os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_1by1_260x260.db")]
 elif "244x324" in args.lmdbpath:
   testdblist = [
@@ -151,11 +151,11 @@ def trainmodel():
 
   if "260x260" in args.lmdbpath:
     transforms = T.Compose([T.RandomCrop((256, 256)),
-                            T.RandomVerticalFlip(),
+                            T.RandomHorizontalFlip(),
                             T.ToTensor()])  # 0 to 1
   elif "244x324" in args.lmdbpath:
     transforms = T.Compose([T.RandomCrop((320, 240)),
-                            T.RandomVerticalFlip(),
+                            T.RandomHorizontalFlip(),
                             T.ToTensor()])  # 0 to 1
 
 
@@ -166,10 +166,10 @@ def trainmodel():
   logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
   criterion = nn.CrossEntropyLoss().cuda()
-  optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
-                         weight_decay=5e-4)
-  # optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
+  # optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
   #                        weight_decay=5e-4)
+  optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
+                         weight_decay=5e-4)
   # https://gaussian37.github.io/dl-pytorch-lr_scheduler/
   # https://sanghyu.tistory.com/113
   # ExponentialLR, LamdaLR same iof gamma is simple
