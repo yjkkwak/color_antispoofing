@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/../Paper_AntiSpoofing/.idea/Paper_AntiSpoofing.iml" filepath="$PROJECT_DIR$/../Paper_AntiSpoofing/.idea/Paper_AntiSpoofing.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" filepath="$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" />
       <module fileurl="file://$PROJECT_DIR$/../SSAN/.idea/SSAN.iml" filepath="$PROJECT_DIR$/../SSAN/.idea/SSAN.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SSDG/.idea/SSDG.iml" filepath="$PROJECT_DIR$/../SSDG/.idea/SSDG.iml" />
       <module fileurl="file://$PROJECT_DIR$/../testbed/.idea/testbed.iml" filepath="$PROJECT_DIR$/../testbed/.idea/testbed.iml" />
     </modules>
   </component>

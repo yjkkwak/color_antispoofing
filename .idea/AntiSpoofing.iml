@@ -8,5 +8,6 @@
     <orderEntry type="module" module-name="testbed" />
     <orderEntry type="module" module-name="SSAN" />
     <orderEntry type="module" module-name="Paper_AntiSpoofing" />
+    <orderEntry type="module" module-name="SSDG" />
   </component>
 </module>

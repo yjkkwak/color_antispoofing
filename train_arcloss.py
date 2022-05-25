@@ -38,6 +38,8 @@ parser.add_argument('--GPU', type=int, default=1, help='specify which gpu to use
 parser.add_argument('--works', type=int, default=4, help='works')
 parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
 parser.add_argument('--gamma', type=float, default=0.97, help='gamma for scheduler')
+parser.add_argument('--opt', type=str, default='sgd', help='sgd or adam')
+parser.add_argument('--momentum', type=float, default=0.9, help='momentum for scheduler')
 parser.add_argument('--meta', type=str, default='meta', help='meta')
 parser.add_argument('--resume', type=str, default='', help='resume path')
 parser.add_argument('--w1', type=float, default=0.0, help='arc loss weight')
@@ -45,10 +47,11 @@ parser.add_argument('--w1', type=float, default=0.0, help='arc loss weight')
 args = parser.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU 2 to use
-struuid = "{}_{}_{}_bsize{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
+struuid = "{}_{}_{}_bsize{}_opt{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
                                                             datetime.now().strftime("%y%m%d"),
                                                             shortuuid.uuid(),
                                                             args.batch_size,
+                                                            args.opt,
                                                             args.lr,
                                                             args.gamma,
                                                             args.epochs,
@@ -67,11 +70,11 @@ logger.print(args)
 dbprefix = "/home/user/work_db/v220419_01"
 if "260x260" in args.lmdbpath:
   testdblist = [
-#                os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
-#                os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
-#                os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
-#                os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
-#                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
+               os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
+               os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
+               os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
+               os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
+               os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
                 os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_1by1_260x260.db")]
 elif "244x324" in args.lmdbpath:
   testdblist = [
@@ -166,10 +169,12 @@ def trainmodel():
   logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
   criterion = nn.CrossEntropyLoss().cuda()
-  # optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
-  #                        weight_decay=5e-4)
-  optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
-                         weight_decay=5e-4)
+  if args.opt.lower() == "adam":
+    optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
+                           weight_decay=5e-4)
+  else:
+    optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr, momentum=args.momentum,
+                          weight_decay=5e-4)
   # https://gaussian37.github.io/dl-pytorch-lr_scheduler/
   # https://sanghyu.tistory.com/113
   # ExponentialLR, LamdaLR same iof gamma is simple
@@ -195,7 +200,7 @@ def trainmodel():
     scheduler.step()
     save_ckpt(epoch, mynet, mymetric, optimizer)
 
-    if epoch > 51:
+    if epoch > 58:
       for testdbpath in testdblist:
         testmetricmodel(epoch, mynet, testdbpath, strckptpath)
 

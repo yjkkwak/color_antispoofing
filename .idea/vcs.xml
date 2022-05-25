@@ -5,5 +5,6 @@
     <mapping directory="$PROJECT_DIR$/../Paper_AntiSpoofing" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../Pytorch_Retinaface" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../SSAN" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SSDG" vcs="Git" />
   </component>
 </project>
