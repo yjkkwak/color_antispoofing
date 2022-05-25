@@ -260,7 +260,8 @@ def _baseresnet(
         state_dict = torch.load("/home/user/work_2022/AntiSpoofing/models/resnet18-f37072fd.pth")
         model.load_state_dict(state_dict)
 
-    model.fc = nn.Linear(model.fc.in_features, 2)
+    ## tmp.
+    model.fc = nn.Linear(model.fc.in_features, 7)
     print ("reset linear")
     return model
 

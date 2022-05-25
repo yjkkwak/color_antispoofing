@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/AntiSpoofing.iml" filepath="$PROJECT_DIR$/.idea/AntiSpoofing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../color_expression/.idea/ColorExpression.iml" filepath="$PROJECT_DIR$/../color_expression/.idea/ColorExpression.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Paper_AntiSpoofing/.idea/Paper_AntiSpoofing.iml" filepath="$PROJECT_DIR$/../Paper_AntiSpoofing/.idea/Paper_AntiSpoofing.iml" />
       <module fileurl="file://$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" filepath="$PROJECT_DIR$/../Pytorch_Retinaface/.idea/Pytorch_Retinaface.iml" />
       <module fileurl="file://$PROJECT_DIR$/../SSAN/.idea/SSAN.iml" filepath="$PROJECT_DIR$/../SSAN/.idea/SSAN.iml" />
