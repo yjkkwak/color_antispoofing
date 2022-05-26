@@ -175,6 +175,7 @@ def trainmodel():
   else:
     optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr, momentum=args.momentum,
                           weight_decay=5e-4)
+  print(optimizer)
   # https://gaussian37.github.io/dl-pytorch-lr_scheduler/
   # https://sanghyu.tistory.com/113
   # ExponentialLR, LamdaLR same iof gamma is simple

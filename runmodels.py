@@ -9,7 +9,7 @@ def sendjobs(dbtype):
   nepoch = 81
   strbsize = 512
   strgpu = 2
-  stropti = "SGD"
+  stropti = "ADAM"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                           stropti,
                                                           "clsloss",
@@ -37,7 +37,7 @@ def sendarclossjobs(dbtype):
   strbsize = 512
   strgpu = 0
   strw1 = 0.0
-  stropti = "SGD"
+  stropti = "ADAM"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                 stropti,
                                                 "Arcloss",
@@ -58,7 +58,7 @@ def sendarclossjobs(dbtype):
 
   strgpu = 1
   strw1 = 1.0
-  stropti = "SGD"
+  stropti = "ADAM"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                          stropti,
                                                          "Arcloss",
