@@ -22,8 +22,8 @@ def sendjobs(dbtype):
   strmeta = "clsloss163264_{}".format(stropti)
   screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
   lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, strgamma, nepoch, strbsize, strgpu, strmeta)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --meta {} ".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strmeta)
   os.system(strcmd)
 
 
@@ -51,8 +51,8 @@ def sendarclossjobs(dbtype):
   strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
   screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
   lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
   os.system(strcmd)
 
 
@@ -72,8 +72,8 @@ def sendarclossjobs(dbtype):
   strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
   screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
   lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
   os.system(strcmd)
 
 
