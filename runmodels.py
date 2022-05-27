@@ -53,11 +53,11 @@ def sendarclossjobs(dbtype):
   lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
   strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
     screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
-  os.system(strcmd)
+  # os.system(strcmd)
 
 
   strgpu = 1
-  strw1 = 1.0
+  strw1 = 0.1
   stropti = "ADAM"
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
                                                          stropti,
@@ -78,5 +78,5 @@ def sendarclossjobs(dbtype):
 
 
 if __name__ == '__main__':
-  sendjobs("1by1_260x260")
+  # sendjobs("1by1_260x260")
   sendarclossjobs("1by1_260x260")

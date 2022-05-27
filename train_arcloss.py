@@ -173,6 +173,7 @@ def trainmodel():
     optimizer = optim.Adam([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr,
                            weight_decay=5e-4)
   else:
+    # works.
     optimizer = optim.SGD([{'params': mynet.parameters()}, {'params': mymetric.parameters()}], lr=args.lr, momentum=args.momentum,
                           weight_decay=5e-4)
   print(optimizer)

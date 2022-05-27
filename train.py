@@ -153,6 +153,7 @@ def trainmodel():
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
   criterion = nn.CrossEntropyLoss().cuda()
   if args.opt.lower() == "adam":
+    # works
     optimizer = optim.Adam(mynet.parameters(), lr=args.lr, weight_decay=5e-4)
   else:
     optimizer = optim.SGD(mynet.parameters(), lr=args.lr,
