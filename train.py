@@ -7,8 +7,7 @@ import argparse
 from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
-
-from networks import getresnet18
+from networks import getbaseresnet18
 from lmdbdataset import lmdbDataset
 from utils import AverageMeter, accuracy, Timer, getbasenamewoext, Logger
 import os
@@ -17,84 +16,104 @@ from datetime import datetime
 from test import testmodel
 from shutil import copyfile
 
-random_seed = 20220406
-torch.manual_seed(random_seed)
-torch.cuda.manual_seed(random_seed)
-torch.cuda.manual_seed_all(random_seed) # if use multi-GPU
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-np.random.seed(random_seed)
-random.seed(random_seed)
+def initargments():
+  parser = argparse.ArgumentParser(description='anti-spoofing training')
+  parser.add_argument('--lmdbpath', type=str,
+                      default='/home/user/work_db/v220922/Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db.sort',
+                      help='db path')
+  parser.add_argument('--ckptpath', type=str,
+                      default='/home/user/model_2022/v220922', help='ckpt path')
+  parser.add_argument('--epochs', type=int, default=80, help='num of epochs')
+  parser.add_argument('--batch_size', type=int, default=256, help='batch_size')
+  parser.add_argument('--GPU', type=int, default=0, help='specify which gpu to use')
+  parser.add_argument('--works', type=int, default=4, help='works')
+  parser.add_argument('--lr', type=float, default=0.0001, help='learning rate')
+  parser.add_argument('--gamma', type=float, default=0.97, help='gamma for scheduler')
+  parser.add_argument('--opt', type=str, default='adam', help='sgd or adam')
+  parser.add_argument('--momentum', type=float, default=0.9, help='momentum for scheduler')
+  parser.add_argument('--meta', type=str, default='meta', help='meta')
+  parser.add_argument('--resume', type=str, default='', help='resume path')
+  parser.add_argument('--random_seed', type=int, default=20220406, help='random_seed')
+  parser.add_argument('--lamda', type=float, default=1.0, help='gamma for scheduler')
 
-parser = argparse.ArgumentParser(description='anti-spoofing training')
-parser.add_argument('--lmdbpath', type=str,
-                    default='/home/user/work_db/v220419_01/Train_v220419_01_CelebA_LDRGB_LD3007_1by1_260x260.db', help='db path')
-parser.add_argument('--ckptpath', type=str,
-                    default='/home/user/model_2022/v220419_01', help='ckpt path')
-parser.add_argument('--epochs', type=int, default=80, help='num of epochs')
-parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-parser.add_argument('--GPU', type=int, default=0, help='specify which gpu to use')
-parser.add_argument('--works', type=int, default=4, help='works')
-parser.add_argument('--lr', type=float, default=0.01, help='learning rate')
-parser.add_argument('--gamma', type=float, default=0.97, help='gamma for scheduler')
-parser.add_argument('--opt', type=str, default='sgd', help='sgd or adam')
-parser.add_argument('--momentum', type=float, default=0.9, help='momentum for scheduler')
-parser.add_argument('--meta', type=str, default='meta', help='meta')
-parser.add_argument('--resume', type=str, default='', help='resume path')
+  args = parser.parse_args()
 
-args = parser.parse_args()
+  torch.manual_seed(args.random_seed)
+  torch.cuda.manual_seed(args.random_seed)
+  torch.cuda.manual_seed_all(args.random_seed)  # if use multi-GPU
+  torch.backends.cudnn.deterministic = True
+  torch.backends.cudnn.benchmark = False
+  np.random.seed(args.random_seed)
+  random.seed(args.random_seed)
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU 2 to use
-struuid = "{}_{}_{}_bsize{}_opt{}_lr{}_gamma_{}_epochs_{}_meta_{}".format(getbasenamewoext(os.path.basename(args.lmdbpath)),
-                                                            datetime.now().strftime("%y%m%d"),
-                                                            shortuuid.uuid(),
-                                                            args.batch_size,
-                                                            args.opt,
-                                                            args.lr,
-                                                            args.gamma,
-                                                            args.epochs,
-                                                            args.meta)
 
-if args.resume != "":
-  print ("resume !!!")
-  resumedir = os.path.dirname(args.resume)
-  struuid = os.path.basename(resumedir)
+  os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU 2 to use
+  struuid = "{}_{}_{}_bsize{}_opt{}_lr{}_gamma_{}_epochs_{}_meta_{}_lamda_{}".format(
+    getbasenamewoext(os.path.basename(args.lmdbpath)),
+    datetime.now().strftime("%y%m%d"),
+    shortuuid.uuid(),
+    args.batch_size,
+    args.opt,
+    args.lr,
+    args.gamma,
+    args.epochs,
+    args.meta, args.lamda)
 
-strckptpath = os.path.join(args.ckptpath, struuid)
-strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
-logger = Logger(strlogpath)
-logger.print(args)
+  if args.resume != "":
+    print ("resume !!!")
+    resumedir = os.path.dirname(args.resume)
+    struuid = os.path.basename(resumedir)
 
-dbprefix = "/home/user/work_db/v220419_01"
-if "260x260" in args.lmdbpath:
-  testdblist = [
-                os.path.join(dbprefix, "Test_v220419_01_CelebA_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_LD3007_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_LDRGB_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_SiW_1by1_260x260.db"),
-                os.path.join(dbprefix, "Test_v220419_01_Emotion_1by1_260x260.db"),
-                os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_1by1_260x260.db")]
-elif "244x324" in args.lmdbpath:
-  testdblist = [
-                # os.path.join(dbprefix, "Test_v220419_01_CelebA_4by3_244x324.db"),
-                # os.path.join(dbprefix, "Test_v220419_01_LD3007_4by3_244x324.db"),
-                # os.path.join(dbprefix, "Test_v220419_01_LDRGB_4by3_244x324.db"),
-                # os.path.join(dbprefix, "Test_v220419_01_SiW_4by3_244x324.db"),
-                # os.path.join(dbprefix, "Test_v220419_01_Emotion_4by3_244x324.db"),
-                os.path.join(dbprefix, "Dev_v220419_01_OULUNPU_4by3_244x324.db")]
+  strckptpath = os.path.join(args.ckptpath, struuid)
+  strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
+  logger = Logger(strlogpath)
+  logger.print(args)
 
-def save_ckpt(epoch, net, optimizer):
-  if os.path.exists(strckptpath) == False:
-    os.makedirs(strckptpath)
-  strpath = "{}/epoch_{:02d}.ckpt".format(strckptpath, epoch)
-  logger.print ("Save ckpt to {}".format(strpath))
+  dbprefix = "/home/user/work_db/v220922"
+  if "260x260" in args.lmdbpath:
+    testdblist = [
+                  os.path.join(dbprefix, "Test_4C1_RECOD_1by1_260x260.db.sort"),
+                  os.path.join(dbprefix, "Test_4C1_FASD_1by1_260x260.db.sort")]
+
+  if "CASIA_MSU_OULU" in args.lmdbpath:
+    testdblist.append(os.path.join(dbprefix, "Test_4C1_REPLAY_1by1_260x260.db.sort"))
+  elif "CASIA_MSU_REPLAY" in args.lmdbpath:
+    testdblist.append(os.path.join(dbprefix, "Test_4C1_OULU_1by1_260x260.db.sort"))
+  elif "CASIA_OULU_REPLAY" in args.lmdbpath:
+    testdblist.append(os.path.join(dbprefix, "Test_4C1_MSU_1by1_260x260.db.sort"))
+  elif "MSU_OULU_REPLAY" in args.lmdbpath:
+    testdblist.append(os.path.join(dbprefix, "Test_4C1_CASIA_1by1_260x260.db.sort"))
+
+  print (testdblist)
+
+  # set args with external variables.
+  args.struuid = struuid
+  args.testdblist = testdblist
+  args.logger = logger
+  args.strckptpath = strckptpath
+  print (args)
+  return args
+
+
+
+def main():
+  args = initargments()
+  trainmodel(args)
+  copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
+
+
+def save_ckpt(args, epoch, net, optimizer):
+  if os.path.exists(args.strckptpath) == False:
+    os.makedirs(args.strckptpath)
+  strpath = "{}/epoch_{:02d}.ckpt".format(args.strckptpath, epoch)
+  args.logger.print ("Save ckpt to {}".format(strpath))
   torch.save({
     'epoch': epoch,
     'model_state_dict': net.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
   }, strpath)
 
-def trainepoch(epoch, trainloader, model, criterion, optimizer, averagemetermap):
+def trainepoch(args, epoch, trainloader, model, criterion, optimizer, averagemetermap):
   #_t['forward_pass'].tic()
   fbtimer = Timer()
   totaliter = len(trainloader)
@@ -122,10 +141,10 @@ def trainepoch(epoch, trainloader, model, criterion, optimizer, averagemetermap)
                                                                                      optimizer.param_groups[0]['lr'],
                                                                                      fbtimer.average_time)
 
-      logger.print (strprint)
+      args.logger.print (strprint)
 
 
-def trainmodel():
+def trainmodel(args):
   """
   """
   averagemetermap = {}
@@ -133,7 +152,7 @@ def trainmodel():
   averagemetermap["acc_am"] = AverageMeter()
   epochtimer = Timer()
 
-  mynet = getresnet18()
+  mynet = getbaseresnet18()
   mynet = mynet.cuda()
 
   if "260x260" in args.lmdbpath:
@@ -148,8 +167,8 @@ def trainmodel():
 
   traindataset = lmdbDataset(args.lmdbpath, transforms)
 
-  logger.print(mynet)
-  logger.print(traindataset)
+  args.logger.print(mynet)
+  args.logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
   criterion = nn.CrossEntropyLoss().cuda()
   if args.opt.lower() == "adam":
@@ -167,33 +186,36 @@ def trainmodel():
 
   startepoch = 0
   if args.resume != "":
-    logger.print("Resume from {}".format(args.resume))
+    args.logger.print("Resume from {}".format(args.resume))
     checkpoint = torch.load(args.resume)
     mynet.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     startepoch = checkpoint['epoch'] + 1
 
-
+  besthter = 100.0
   for epoch in range(startepoch, args.epochs):
     mynet.train()
     epochtimer.tic()
-    trainepoch(epoch, trainloader, mynet, criterion, optimizer, averagemetermap)
+    trainepoch(args, epoch, trainloader, mynet, criterion, optimizer, averagemetermap)
     epochtimer.toc()
     strprint = "{}/{} loss:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(epoch, args.epochs, averagemetermap["loss_am"].avg, averagemetermap["acc_am"].avg, optimizer.param_groups[0]['lr'], epochtimer.average_time)
-    logger.print (strprint)
+    args.logger.print (strprint)
     scheduler.step()
-    save_ckpt(epoch, mynet, optimizer)
+    if epoch > 20 and averagemetermap["acc_am"].avg > 99.0:
+      sumhter = 0.0
+      for testdbpath in args.testdblist:
+        hter = testmodel(epoch, mynet, testdbpath, args.strckptpath)
+        sumhter += hter
+      sumhter = sumhter/3.0
 
-    if epoch > 58:
-      for testdbpath in testdblist:
-        testmodel(epoch, mynet, testdbpath, strckptpath)
+      if besthter > sumhter:
+        besthter = sumhter
+        save_ckpt(args, epoch, mynet, optimizer)
+        copyfile(args.strlogpath, "{}/trainlog.txt".format(args.strckptpath))
+
 
 
 if __name__ == '__main__':
-  trainmodel()
-  copyfile(strlogpath, "{}/trainlog.txt".format(strckptpath))
+  main()
 
-  # epoch = 10
-  # strpath = "{}/epoch_{:02d}.ckpt".format(strckptpath, epoch)
-  # print (strpath)
 

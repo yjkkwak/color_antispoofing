@@ -1,11 +1,10 @@
 from utils import Hook, nested_children
-# from torchvision import models
+import torchvision.models as tmodels
 from models.myresnet import myresnet18
-from models.baseresnet import baseresnet18
 from models.metricresnet import metricresnet18
+from models.baseresnetwgrl import baseresnet18wgrl
 import torch
 import torch.nn as nn
-
 
 def getresnet18():
   """
@@ -15,17 +14,24 @@ def getresnet18():
   return resnet18
 
 def getbaseresnet18():
-  resnet18 = baseresnet18(pretrained=True)
+  resnet18 = tmodels.resnet18(pretrained=True)
+  resnet18.fc = nn.Linear(512, 2)
+
   return resnet18
 
 def getmetricresnet18():
   resnet18 = metricresnet18(pretrained=False, num_classes=2)
   return resnet18
 
+def getbaseresnet18wgrl(numclass, numdclass):
+  resnet18 = baseresnet18wgrl(numclass, numdclass)
+  return resnet18
+
 def debugmode():
   rinput = torch.randn((1, 3, 256, 256))
-  #mynet = getresnet18()
-  mynet = getmetricresnet18()
+  mynet = getbaseresnet18()
+  #mynet = getmetricresnet18()
+  # mynet = getbaseresnet18wgrl(2, 3)
   print (mynet)
   forwardhook = []
   for l in nested_children(mynet):

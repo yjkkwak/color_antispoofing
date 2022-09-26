@@ -12,62 +12,11 @@ from torch.utils.data import DataLoader
 
 from networks import getresnet18, getbaseresnet18, getmetricresnet18
 from lmdbdataset import lmdbDataset
-from utils import AverageMeter, accuracy, getbasenamewoext, genfarfrreer, gentprwonlylive
+from utils import AverageMeter, accuracy, getbasenamewoext
 import os
+from eval.performance import ssan_performances_val
 import shortuuid
 from datetime import datetime
-
-
-#
-# def load_ckpt(model):
-#   print("Load ckpt from {}".format(args.ckptpath))
-#   checkpoint = torch.load(args.ckptpath)
-#   model.load_state_dict(checkpoint['model_state_dict'])
-#   # optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-#   epoch = checkpoint['epoch']
-#   print ("Loaded epoch {}".format(epoch))
-
-def testmetricmodel(epoch, model, testdbpath, strckptpath):
-  """
-    """
-  # print ("test db {} based on {}".format(testdbpath, strckptpath))
-  averagemetermap = {}
-  averagemetermap["acc_am"] = AverageMeter()
-
-  strscorebasepath = os.path.join(strckptpath, getbasenamewoext(os.path.basename(testdbpath)))
-  if os.path.exists(strscorebasepath) == False:
-    os.makedirs(strscorebasepath)
-  strscorepath = "{}/{:02d}.score".format(strscorebasepath, epoch)
-  the_file = open(strscorepath, "w")
-  if "260x260" in testdbpath:
-    transforms = T.Compose([T.CenterCrop((256, 256)),
-                            T.ToTensor()])  # 0 to 1
-  elif "244x324" in testdbpath:
-    transforms = T.Compose([T.CenterCrop((320, 240)),
-                            T.ToTensor()])  # 0 to 1
-  testdataset = lmdbDataset(testdbpath, transforms)
-
-  # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0, pin_memory=True)
-
-  model.eval()
-  probsm = nn.Softmax(dim=1)
-
-  for index, (images, labels, imgpath) in enumerate(testloader):
-    images, labels = images.cuda(), labels.cuda()
-    logit, fc5 = model(images)
-    prob = probsm(logit)
-    acc = accuracy(logit, labels)
-    averagemetermap["acc_am"].update(acc[0].item())
-    for idx, imgpathitem in enumerate(imgpath):
-      the_file.write("{:.5f} {:.5f} {}\n".format(float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
-  the_file.close()
-
-  # gen performace
-  if "Emotion" in testdbpath:
-    gentprwonlylive(strscorepath)
-  else:
-    genfarfrreer(strscorepath)
 
 def testmodel(epoch, model, testdbpath, strckptpath):
   """
@@ -90,11 +39,11 @@ def testmodel(epoch, model, testdbpath, strckptpath):
   testdataset = lmdbDataset(testdbpath, transforms)
 
   # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   probsm = nn.Softmax(dim=1)
-
+  writelist = []
   for index, (images, labels, imgpath) in enumerate(testloader):
     images, labels = images.cuda(), labels.cuda()
     logit = model(images)
@@ -102,14 +51,16 @@ def testmodel(epoch, model, testdbpath, strckptpath):
     acc = accuracy(logit, labels)
     averagemetermap["acc_am"].update(acc[0].item())
     for idx, imgpathitem in enumerate(imgpath):
-      the_file.write("{:.5f} {:.5f} {}\n".format(float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
+      writelist.append("{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
+
+
+  for witem in writelist:
+    the_file.write(witem)
   the_file.close()
 
-  # gen performace
-  if "Emotion" in testdbpath:
-    gentprwonlylive(strscorepath)
-  else:
-    genfarfrreer(strscorepath)
+  hter = ssan_performances_val(strscorepath)
+  return hter
+
 
 def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
   """
@@ -145,7 +96,7 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
   testdataset = lmdbDataset(testdbpath, transforms)
 
   # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=512, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   probsm = nn.Softmax(dim=1)
@@ -160,11 +111,7 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
       the_file.write("{:.5f} {:.5f} {}\n".format(float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
   the_file.close()
 
-  # gen performace
-  if "Emotion" in testdbpath:
-    gentprwonlylive(strscorepath)
-  else:
-    genfarfrreer(strscorepath)
+
 
 
 if __name__ == '__main__':

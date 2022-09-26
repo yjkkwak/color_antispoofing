@@ -1,82 +1,49 @@
 import os
 
-
-def sendjobs(dbtype):
-  strbaseckpt = "/home/user/model_2022/v220513_02"
+def runjobs():
+  strbaseckpt = "/home/user/model_2022/v220922/"
   strpython = "python -u /home/user/work_2022/AntiSpoofing/train.py"
 
-  strgamma = 0.92
-  nepoch = 81
-  strbsize = 512
-  strgpu = 2
-  stropti = "ADAM"
-  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
-                                                          stropti,
-                                                          "clsloss",
-                                                          "opt{}".format(stropti),
-                                                          "lr0.005",
-                                                          "gamma{}".format(strgamma),
-                                                          "e{}".format(nepoch),
-                                                          "bsize{}".format(strbsize),
-                                                          "gpu{}".format(strgpu))
-  strmeta = "clsloss163264_{}".format(stropti)
-  screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strmeta)
-  os.system(strcmd)
+  strseed = 20220406
+  strlr = 0.0001
+  strgamma = 0.99
+  nepoch = 100
+  strbsize = 256
+  stropti = "adam"
 
-
-
-def sendarclossjobs(dbtype):
-  strbaseckpt = "/home/user/model_2022/v220513_02"
-  strpython = "python -u /home/user/work_2022/AntiSpoofing/train_arcloss.py"
-
-  strgamma = 0.92
-  nepoch = 81
-  strbsize = 512
   strgpu = 0
-  strw1 = 0.0
-  stropti = "ADAM"
-  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
-                                                stropti,
-                                                "Arcloss",
-                                                "opt{}".format(stropti),
-                                                "lr0.005",
-                                                "gamma{}".format(strgamma),
-                                                "e{}".format(nepoch),
-                                                "bsize{}".format(strbsize),
-                                                "gpu{}".format(strgpu),
-                                                "w{}".format(strw1))
-  strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
-  screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
-  # os.system(strcmd)
-
+  strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_OULU_1by1_260x260.db.sort"
+  send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed)
 
   strgpu = 1
-  strw1 = 0.1
-  stropti = "ADAM"
-  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(dbtype,
-                                                         stropti,
-                                                         "Arcloss",
-                                                         "opt{}".format(stropti),
-                                                         "lr0.005",
-                                                         "gamma{}".format(strgamma),
-                                                         "e{}".format(nepoch),
-                                                         "bsize{}".format(strbsize),
-                                                         "gpu{}".format(strgpu),
-                                                         "w{}".format(strw1))
-  strmeta = "arcloss163264_w1_{}_{}".format(strw1, stropti)
+  strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db.sort"
+  send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed)
+
+  strgpu = 2
+  strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_OULU_REPLAY_1by1_260x260.db.sort"
+  send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed)
+
+  strgpu = 3
+  strDB = "Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db.sort"
+  send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed)
+
+def send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed):
+  strmeta = "resnet18_{}_binary".format(stropti)
+  strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(strDB,
+                                                      stropti,
+                                                      "bcls",
+                                                      "lr{}".format(strlr),
+                                                      "gamma{}".format(strgamma),
+                                                      "e{}".format(nepoch),
+                                                      "bsize{}".format(strbsize),
+                                                      "gpu{}".format(strgpu),
+                                                      "meta{}".format(strmeta),
+                                                      "seed{}".format(strseed))
   screenoption = "screen -L -Logfile {}.txt -d -m ".format(strlogoption)
-  lmdbpath = "/home/user/work_db/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_{}.db".format(dbtype)
-  strcmd = "{} {} --ckptpath {} --lmdbpath {} --opt {} --lr 0.005  --gamma {} --epochs {} --batch_size {} --GPU {} --w1 {} --meta {} ".format(
-    screenoption, strpython, strbaseckpt, lmdbpath, stropti, strgamma, nepoch, strbsize, strgpu, strw1, strmeta)
+  lmdbpath = "/home/user/work_db/v220922/{}".format(strDB)
+  strcmd = "{} {} --ckptpath {} --lmdbpath {} --lr {}  --gamma {} --opt {} --epochs {} --batch_size {} --GPU {} --meta {} --random_seed {}".format(
+    screenoption, strpython, strbaseckpt, lmdbpath, strlr, strgamma, stropti, nepoch, strbsize, strgpu, strmeta, strseed)
   os.system(strcmd)
 
-
 if __name__ == '__main__':
-  # sendjobs("1by1_260x260")
-  sendarclossjobs("1by1_260x260")
+  runjobs()

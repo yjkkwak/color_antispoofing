@@ -6,23 +6,20 @@ def getbasenamewoext(srcfile):
   return pathname
 
 def main():
-  basemeta = "/home/user/work_2022/AntiSpoofing/meta/v220419_01/"
-  baselmdb = "/home/user/work_db/v220419_01/"
-  dblist = [
-            "Train_v220419_01_OULUNPU.list",
-            # "Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU.list",
-            # "Train_v220419_01_SiW_LDRGB_LD3007.list",
-            # "Train_v220419_01_CelebA_LDRGB_LD3007.list",
-            # "Train_v220419_01_CelebA_SiW_LD3007.list",
-            # "Train_v220419_01_CelebA_SiW_LDRGB.list",
-            # "Dev_v220419_01_OULUNPU.list",
-            # "Test_v220419_01_Emotion.list",
-            # "Test_v220419_01_SiW.list",
-            # "Test_v220419_01_CelebA.list",
-            # "Test_v220419_01_LD3007.list",
-            # "Test_v220419_01_LDRGB.list",
-            # "Train_v220419_01_CelebA_SiW_LDRGB_LD3007.list"
+  basemeta = "/home/user/work_2022/AntiSpoofing/meta/v220922/"
+  baselmdb = "/home/user/work_db/v220922/"
+  dblist = ["Test_4C1_CASIA.list",
+            "Test_4C1_FASD.list",
+            "Test_4C1_MSU.list",
+            "Test_4C1_OULU.list",
+            "Test_4C1_RECOD.list",
+            "Test_4C1_REPLAY.list",
+            "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_OULU.list",
+            "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY.list",
+            "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_OULU_REPLAY.list",
+            "Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY.list"
             ]
+
   patchtypelist = ["1by1_260x260"]#, "4by3_244x324"]# 1by1_260x260 / 4by3_244x324
 
   for dbitem in dblist:
@@ -33,7 +30,7 @@ def main():
         baselmdb,
         patchitem)
       strcmd = "{} {}".format(strpythoncmd, stroptions)
-      usedpathname = "{}_{}.db.path".format(getbasenamewoext(dbitem), patchitem)
+      usedpathname = "{}_{}.db.sort.path".format(getbasenamewoext(dbitem), patchitem)
       usedimagepath = os.path.join(baselmdb, "{}".format(usedpathname))
       print (usedimagepath)
   #    time.sleep(10)

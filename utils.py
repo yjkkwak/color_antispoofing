@@ -76,10 +76,14 @@ def accuracy(output, target, topk=(1,)):
 class Logger(object):
   '''Save training process to log file with simple plot function.'''
   def __init__(self, fpath):
+    self.fpath = fpath
     if os.path.exists(fpath):
       self.file = open(fpath, "a")
     else:
       self.file = open(fpath, "w")
+
+  def getlogpath(self):
+    return self.fpath
 
   def print(self, strlog):
     self.file.write("{}\n".format(strlog))

@@ -107,12 +107,17 @@ def genpatch(imgpath):
   x, y, w, h = int(strtokens[0]), int(strtokens[1]), int(strtokens[2]), int(strtokens[3])
   # 256 x 256 from 260 x 260
   ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "1by1", imgpath)
-  # 240 x 320 from 244 x 324
-  ecode2, x_4by3, y_4by3, w_4by3, h_4by3 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "4by3", imgpath)
-
-  if ecode1 + ecode2 < 2:
-    # print ("gen patch error code 1by1:{} 4by3:{}".format(ecode1, ecode2))
+  if ecode1 < 1:
+    # print ("gen patch error code 1by1:{} ".format(ecode1))
     return None
+
+
+  # 240 x 320 from 244 x 324
+  # ecode2, x_4by3, y_4by3, w_4by3, h_4by3 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "4by3", imgpath)
+  #
+  # if ecode1 + ecode2 < 2:
+  #   # print ("gen patch error code 1by1:{} 4by3:{}".format(ecode1, ecode2))
+  #   return None
 
   if False:
     draw = ImageDraw.Draw(pilimg)
@@ -210,14 +215,15 @@ def writedatumtolmdb():
     strline = strline.strip()
     strlines.append(strline)
 
-  random.shuffle(strlines)
+  strlines.sort()
+  # random.shuffle(strlines)
   batch_size = 3000
   batches = int(len(strlines) / batch_size)
   print (batches)
 
   listname = getbasenamewoext(os.path.basename(args.listpath))
-  dbname = "{}_{}.db".format(listname, args.patchtype)
-  usedpathname = "{}_{}.db.path".format(listname, args.patchtype)
+  dbname = "{}_{}.db.sort".format(listname, args.patchtype)
+  usedpathname = "{}_{}.db.sort.path".format(listname, args.patchtype)
 
   lmdbpath = os.path.join(args.dbpath, "{}".format(dbname))
   usedimagepath = os.path.join(args.dbpath, "{}".format(usedpathname))
