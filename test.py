@@ -38,7 +38,6 @@ def testmodel(epoch, model, testdbpath, strckptpath):
                             T.ToTensor()])  # 0 to 1
   testdataset = lmdbDataset(testdbpath, transforms)
 
-  # print(testdataset)
   testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
@@ -53,6 +52,57 @@ def testmodel(epoch, model, testdbpath, strckptpath):
     for idx, imgpathitem in enumerate(imgpath):
       writelist.append("{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
 
+
+  for witem in writelist:
+    the_file.write(witem)
+  the_file.close()
+
+  hter = ssan_performances_val(strscorepath)
+  return hter
+
+
+
+def testpdlemodel(epoch, model, testdbpath, strckptpath):
+  """
+  """
+  # print ("test db {} based on {}".format(testdbpath, strckptpath))
+  averagemetermap = {}
+  averagemetermap["acc_am"] = AverageMeter()
+
+  strscorebasepath = os.path.join(strckptpath, getbasenamewoext(os.path.basename(testdbpath)))
+  if os.path.exists(strscorebasepath) == False:
+    os.makedirs(strscorebasepath)
+  strscorepath = "{}/{:02d}.score".format(strscorebasepath, epoch)
+  the_file = open(strscorepath, "w")
+  if "260x260" in testdbpath:
+    transforms = T.Compose([T.CenterCrop((256, 256)),
+                            T.ToTensor()])  # 0 to 1
+  elif "244x324" in testdbpath:
+    transforms = T.Compose([T.CenterCrop((320, 240)),
+                            T.ToTensor()])  # 0 to 1
+  testdataset = lmdbDataset(testdbpath, transforms)
+
+  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+
+  model.eval()
+  writelist = []
+  probsm = nn.Softmax(dim=1)
+  regrsteps = torch.linspace(0, 1.0, steps=11).cuda()
+  for index, (images, labels, imgpath) in enumerate(testloader):
+    images, labels = images.cuda(), labels.cuda()
+    logit, dislogit = model(images)
+    prob = probsm(logit)
+    expectprob = torch.sum(regrsteps * prob, dim=1)
+    map_score = expectprob.detach().cpu().numpy()
+    tmplogit = torch.zeros(images.size(0), 2).cuda()
+    tmplogit[:, 1] = torch.from_numpy(map_score)
+    tmplogit[:, 0] = 1.0 - tmplogit[:, 1]
+
+
+    acc = accuracy(tmplogit, labels)
+    averagemetermap["acc_am"].update(acc[0].item())
+    for idx, imgpathitem in enumerate(imgpath):
+      writelist.append("{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(tmplogit[idx][0]), float(tmplogit[idx][1]), imgpathitem))
 
   for witem in writelist:
     the_file.write(witem)

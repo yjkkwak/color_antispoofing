@@ -10,7 +10,7 @@ from torchvision import transforms as T
 from torchvision.transforms.functional import to_pil_image
 
 class lmdbDatasetwpdle(tdata.Dataset):
-  def __init__(self, db_path, transform=None, lk=10):
+  def __init__(self, db_path, transform=None, lk=11):
     # 11 -1 -> 10
     self.lk = lk-1
     self.env = None

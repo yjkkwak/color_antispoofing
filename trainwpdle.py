@@ -8,12 +8,13 @@ from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
 from networks import getbaseresnet18
-from lmdbdataset import lmdbDataset
+#from lmdbdataset import lmdbDataset
+from lmdbpdledataset import lmdbDatasetwpdle
 from utils import AverageMeter, accuracy, Timer, getbasenamewoext, Logger
 import os
 import shortuuid
 from datetime import datetime
-from test import testmodel
+from test import testpdlemodel
 from shutil import copyfile
 
 def initargments():
@@ -34,7 +35,7 @@ def initargments():
   parser.add_argument('--meta', type=str, default='meta', help='meta')
   parser.add_argument('--resume', type=str, default='', help='resume path')
   parser.add_argument('--random_seed', type=int, default=20220406, help='random_seed')
-  parser.add_argument('--lamda', type=float, default=1.0, help='gamma for scheduler')
+  parser.add_argument('--lamda', type=float, default=0.75, help='gamma for scheduler')
 
   args = parser.parse_args()
 
@@ -118,15 +119,30 @@ def trainepoch(args, epoch, trainloader, model, criterion, optimizer, averagemet
   #_t['forward_pass'].tic()
   fbtimer = Timer()
   totaliter = len(trainloader)
-  # probsm = nn.Softmax(dim=1)
-  for index, (images, labels, imgpath) in enumerate(trainloader):
+  regrsteps = torch.linspace(0, 1.0, steps=11).cuda()
+  probsm = nn.Softmax(dim=1)
+  for index, (tmpimages, tmplabels, imgpath, rimg, rlab, tmpuid1, tmpuid2) in enumerate(trainloader):
     fbtimer.tic()
+    rand_idx = torch.randperm(rimg.shape[0])
+    images = torch.cat((tmpimages, rimg[rand_idx,]), dim=0)
+    labels = torch.cat((tmplabels, rlab[rand_idx]), dim=0)
+    uid1 = torch.cat((tmpuid1, tmpuid2[rand_idx]), dim=0)
+    labels = labels.type(torch.FloatTensor)
+
     images, labels = images.cuda(), labels.cuda()
+    uid1 = uid1.cuda()
     optimizer.zero_grad()
-    logit = model(images)
-    # prob = probsm(logit)
-    loss = criterion(logit, labels)
-    acc = accuracy(logit, labels)
+    logit, dislogit = model(images)
+    prob = probsm(logit)
+    expectprob = torch.sum(regrsteps * prob, dim=1)
+    mseloss = criterion["mse"](expectprob, labels)
+    advclsloss = criterion["cls"](dislogit, uid1)
+    loss = args.lamda*mseloss + (1.0-args.lamda)*advclsloss
+    #loss = args.lamda * mseloss + args.lamda * advclsloss
+    tmplogit = torch.zeros(images.size(0), 2).cuda()
+    tmplogit[:, 1] = expectprob
+    tmplogit[:, 0] = 1.0 - tmplogit[:, 1]
+    acc = accuracy(tmplogit[0:tmpimages.shape[0], :], labels[0:tmplabels.shape[0]])
     loss.backward()
     optimizer.step()
     averagemetermap["loss_am"].update(loss.item())
@@ -166,7 +182,7 @@ def trainmodel(args):
                             T.ToTensor()])  # 0 to 1
 
 
-  traindataset = lmdbDataset(args.lmdbpath, transforms)
+  traindataset = lmdbDatasetwpdle(args.lmdbpath, transforms, 11)
 
   args.logger.print(mynet)
   args.logger.print(traindataset)
@@ -205,7 +221,7 @@ def trainmodel(args):
     if epoch > 20:
       sumhter = 0.0
       for testdbpath in args.testdblist:
-        hter = testmodel(epoch, mynet, testdbpath, args.strckptpath)
+        hter = testpdlemodel(epoch, mynet, testdbpath, args.strckptpath)
         sumhter += hter
       sumhter = sumhter/len(args.testdblist)
 
@@ -213,8 +229,6 @@ def trainmodel(args):
         besthter = sumhter
         save_ckpt(args, epoch, mynet, optimizer)
         copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
-
-
 
 if __name__ == '__main__':
   main()
