@@ -21,7 +21,8 @@ class lmdbDatasetwpdle(tdata.Dataset):
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
     self.uuid = {}
-    self.len = self.env.stat()["entries"]
+    self.factlen = self.env.stat()["entries"]
+    self.len = self.factlen//2
 
   def _init_db(self):
     self.env = lmdb.open(self.db_path,
@@ -30,7 +31,7 @@ class lmdbDatasetwpdle(tdata.Dataset):
     self.txn = self.env.begin()
 
   def __len__(self):
-    return self.env.stat()["entries"]
+    return self.len
 
   def rand_bbox(self, size, lam):
     # tensor
@@ -77,7 +78,8 @@ class lmdbDatasetwpdle(tdata.Dataset):
 
     return rimg, rlabel, rimgpath
 
-  def __getitem__(self, index):
+  def __getitem__(self, xindex):
+    index = np.random.randint(0, self.factlen)
     img, label, imgpath = self.getitem(index)
     rimg, rlabel, rimgpath = self.getpairitem(index, label)
     strtoken = imgpath.split("/")

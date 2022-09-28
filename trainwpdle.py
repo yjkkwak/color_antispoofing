@@ -7,7 +7,7 @@ import argparse
 from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
-from networks import getbaseresnet18
+from networks import getbaseresnet18wgrl
 #from lmdbdataset import lmdbDataset
 from lmdbpdledataset import lmdbDatasetwpdle
 from utils import AverageMeter, accuracy, Timer, getbasenamewoext, Logger
@@ -66,11 +66,11 @@ def initargments():
     struuid = os.path.basename(resumedir)
 
   strckptpath = os.path.join(args.ckptpath, struuid)
-  strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
+  strlogpath = "/home/user/vivaanspace/logworkspace/{}.log".format(struuid)
   logger = Logger(strlogpath)
   logger.print(args)
 
-  dbprefix = "/home/user/work_db/v220922"
+  dbprefix = "/home/user/vivaanspace/work_db/v220922"
   if "260x260" in args.lmdbpath:
     testdblist = [
                   os.path.join(dbprefix, "Test_4C1_RECOD_1by1_260x260.db.sort"),
@@ -104,10 +104,13 @@ def main():
   copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
 
 
-def save_ckpt(args, epoch, net, optimizer):
+def save_ckpt(args, epoch, net, optimizer, islast=False):
   if os.path.exists(args.strckptpath) == False:
     os.makedirs(args.strckptpath)
-  strpath = "{}/epoch_{:02d}.ckpt".format(args.strckptpath, epoch)
+  if islast:
+    strpath = "{}/epoch_last.ckpt".format(args.strckptpath, epoch)
+  else:
+    strpath = "{}/epoch_{:02d}.ckpt".format(args.strckptpath, epoch)
   args.logger.print ("Save ckpt to {}".format(strpath))
   torch.save({
     'epoch': epoch,
@@ -138,7 +141,7 @@ def trainepoch(args, epoch, trainloader, model, criterion, optimizer, averagemet
     mseloss = criterion["mse"](expectprob, labels)
     advclsloss = criterion["cls"](dislogit, uid1)
     loss = args.lamda*mseloss + (1.0-args.lamda)*advclsloss
-    #loss = args.lamda * mseloss + args.lamda * advclsloss
+    # loss = args.lamda * mseloss + args.lamda * advclsloss
     tmplogit = torch.zeros(images.size(0), 2).cuda()
     tmplogit[:, 1] = expectprob
     tmplogit[:, 0] = 1.0 - tmplogit[:, 1]
@@ -169,7 +172,7 @@ def trainmodel(args):
   averagemetermap["acc_am"] = AverageMeter()
   epochtimer = Timer()
 
-  mynet = getbaseresnet18()
+  mynet = getbaseresnet18wgrl(11, 7)
   mynet = mynet.cuda()
 
   if "260x260" in args.lmdbpath:
@@ -187,7 +190,10 @@ def trainmodel(args):
   args.logger.print(mynet)
   args.logger.print(traindataset)
   trainloader = DataLoader(traindataset, batch_size=args.batch_size, shuffle=True, num_workers=args.works, pin_memory=True)
-  criterion = nn.CrossEntropyLoss().cuda()
+  criterion = {}
+  criterion["cls"] = nn.CrossEntropyLoss().cuda()
+  criterion["mse"] = nn.MSELoss().cuda()
+
   if args.opt.lower() == "adam":
     # works
     optimizer = optim.Adam(mynet.parameters(), lr=args.lr, weight_decay=5e-4)
@@ -218,7 +224,7 @@ def trainmodel(args):
     strprint = "{}/{} loss:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(epoch, args.epochs, averagemetermap["loss_am"].avg, averagemetermap["acc_am"].avg, optimizer.param_groups[0]['lr'], epochtimer.average_time)
     args.logger.print (strprint)
     scheduler.step()
-    if epoch > 20:
+    if epoch > 15:
       sumhter = 0.0
       for testdbpath in args.testdblist:
         hter = testpdlemodel(epoch, mynet, testdbpath, args.strckptpath)
@@ -229,6 +235,8 @@ def trainmodel(args):
         besthter = sumhter
         save_ckpt(args, epoch, mynet, optimizer)
         copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
+    # last ckpt
+    save_ckpt(args, epoch, mynet, optimizer, True)
 
 if __name__ == '__main__':
   main()
