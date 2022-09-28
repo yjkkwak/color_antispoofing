@@ -37,7 +37,7 @@ def testmodel(epoch, model, testdbpath, strckptpath):
     transforms = T.Compose([T.CenterCrop((320, 240)),
                             T.ToTensor()])  # 0 to 1
 
-  if "CASIA" in testdbpath or "FASD" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
+  if "CASIA" in testdbpath or "REPLAY" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
     testdataset = lmdbVideoDataset(testdbpath, transforms)
   else:
     testdataset = lmdbDataset(testdbpath, transforms)
@@ -84,7 +84,11 @@ def testpdlemodel(epoch, model, testdbpath, strckptpath):
   elif "244x324" in testdbpath:
     transforms = T.Compose([T.CenterCrop((320, 240)),
                             T.ToTensor()])  # 0 to 1
-  testdataset = lmdbDataset(testdbpath, transforms)
+
+  if "CASIA" in testdbpath or "REPLAY" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
+    testdataset = lmdbVideoDataset(testdbpath, transforms)
+  else:
+    testdataset = lmdbDataset(testdbpath, transforms)
 
   testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
