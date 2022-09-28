@@ -35,7 +35,7 @@ def initargments():
   parser.add_argument('--meta', type=str, default='meta', help='meta')
   parser.add_argument('--resume', type=str, default='', help='resume path')
   parser.add_argument('--random_seed', type=int, default=20220406, help='random_seed')
-  parser.add_argument('--lamda', type=float, default=0.75, help='gamma for scheduler')
+  parser.add_argument('--lamda', type=float, default=1.0, help='gamma for scheduler')
 
   args = parser.parse_args()
 
@@ -140,8 +140,8 @@ def trainepoch(args, epoch, trainloader, model, criterion, optimizer, averagemet
     expectprob = torch.sum(regrsteps * prob, dim=1)
     mseloss = criterion["mse"](expectprob, labels)
     advclsloss = criterion["cls"](dislogit, uid1)
-    loss = args.lamda*mseloss + (1.0-args.lamda)*advclsloss
-    # loss = args.lamda * mseloss + args.lamda * advclsloss
+    # loss = args.lamda*mseloss + (1.0-args.lamda)*advclsloss
+    loss = mseloss + args.lamda * advclsloss
     tmplogit = torch.zeros(images.size(0), 2).cuda()
     tmplogit[:, 1] = expectprob
     tmplogit[:, 0] = 1.0 - tmplogit[:, 1]
