@@ -16,6 +16,11 @@ class lmdbDataset(tdata.Dataset):
     self.db_path = db_path
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
+
+    self.factlen = self.env.stat()["entries"]
+    self.len = self.factlen // 5
+
+
     # debug
     # index = 1100
     # strid = "{:08}".format(index)
@@ -38,9 +43,10 @@ class lmdbDataset(tdata.Dataset):
     self.txn = self.env.begin()
 
   def __len__(self):
-    return self.env.stat()["entries"]
+    return self.len#self.env.stat()["entries"]
 
-  def __getitem__(self, index):
+  def __getitem__(self, xindex):
+    index = np.random.randint(0, self.factlen)
     strid = "{:08}".format(index)
     lmdb_data = self.txn.get(strid.encode("ascii"))
     self.mydatum.ParseFromString(lmdb_data)
@@ -54,6 +60,77 @@ class lmdbDataset(tdata.Dataset):
       img = self.transform(img)
 
     return img, label, imgpath
+
+
+class lmdbVideoDataset(tdata.Dataset):
+  def __init__(self, db_path, transform=None):
+    self.env = None
+    self.txn = None
+    self.transform = transform
+    self.db_path = db_path
+    self.db_path_img = "{}{}".format(self.db_path, ".path")
+    self.videopath = {}
+    self.videokeys = []
+    self.setsinglevideo()
+    self.mydatum = mydatum_pb2.myDatum()
+    self._init_db()
+
+  def _init_db(self):
+    self.env = lmdb.open(self.db_path,
+                         readonly=True, lock=False,
+                         readahead=False, meminit=False)
+    self.txn = self.env.begin()
+
+  def setkeys(self, strkey, strpath):
+    if strkey in self.videopath.keys():
+      self.videopath[strkey].append(strpath)
+    else:
+      self.videopath[strkey] = []
+      self.videopath[strkey].append(strpath)
+
+  def setsinglevideo(self):
+    fpath = open(self.db_path_img, "r")
+    strlines = fpath.readlines()
+    for index, strline in enumerate(strlines):
+      strline = strline.strip()
+      if "MSU-MFSD" in strline or "REPLAY-ATTACK" in strline:
+        if ".mov" in strline:
+          strtokens = strline.split(".mov")
+          strkey = "{}.mov".format(strtokens[0])
+        else:
+          strtokens = strline.split(".mp4")
+          strkey = "{}.mp4".format(strtokens[0])
+        self.setkeys(strkey, index)
+      elif "OULU-NPU" in strline or "CASIA-MFSD" in strline:
+        strkey = os.path.dirname(strline)
+        self.setkeys(strkey, index)
+    self.videokeys = list(self.videopath.keys())
+
+  def __len__(self):
+    return len(self.videokeys)
+
+  def __getitem__(self, reindex):
+    strkey = self.videokeys[reindex]
+    listofindex = self.videopath[strkey]
+
+    files_total = len(listofindex)
+    interval = (files_total // 10) + 1
+    index = listofindex[interval]
+
+    strid = "{:08}".format(index)
+    lmdb_data = self.txn.get(strid.encode("ascii"))
+    self.mydatum.ParseFromString(lmdb_data)
+    dst = np.fromstring(self.mydatum.data, dtype=np.uint8)
+    dst = dst.reshape(self.mydatum.height, self.mydatum.width, self.mydatum.channels)
+    img = Image.fromarray(dst)
+    label = self.mydatum.label
+    imgpath = self.mydatum.path
+
+    if self.transform is not None:
+      img = self.transform(img)
+
+    return img, label, imgpath
+
 
 if __name__ == '__main__':
   transforms = T.Compose([T.CenterCrop((256, 256)),

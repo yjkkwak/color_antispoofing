@@ -103,10 +103,14 @@ def main():
   copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
 
 
-def save_ckpt(args, epoch, net, optimizer):
+
+def save_ckpt(args, epoch, net, optimizer, islast=False):
   if os.path.exists(args.strckptpath) == False:
     os.makedirs(args.strckptpath)
-  strpath = "{}/epoch_{:02d}.ckpt".format(args.strckptpath, epoch)
+  if islast:
+    strpath = "{}/epoch_last.ckpt".format(args.strckptpath, epoch)
+  else:
+    strpath = "{}/epoch_{:02d}.ckpt".format(args.strckptpath, epoch)
   args.logger.print ("Save ckpt to {}".format(strpath))
   torch.save({
     'epoch': epoch,
@@ -213,7 +217,8 @@ def trainmodel(args):
         besthter = sumhter
         save_ckpt(args, epoch, mynet, optimizer)
         copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
-
+    # last ckpt
+    save_ckpt(args, epoch, mynet, optimizer, True)
 
 
 if __name__ == '__main__':

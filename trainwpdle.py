@@ -224,7 +224,7 @@ def trainmodel(args):
     strprint = "{}/{} loss:{:.5f} acc:{:.5f} lr:{:.5f} time:{:.5f}".format(epoch, args.epochs, averagemetermap["loss_am"].avg, averagemetermap["acc_am"].avg, optimizer.param_groups[0]['lr'], epochtimer.average_time)
     args.logger.print (strprint)
     scheduler.step()
-    if epoch > 15:
+    if epoch > 20:
       sumhter = 0.0
       for testdbpath in args.testdblist:
         hter = testpdlemodel(epoch, mynet, testdbpath, args.strckptpath)

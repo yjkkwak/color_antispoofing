@@ -11,8 +11,8 @@ from torchvision import models
 from torch.utils.data import DataLoader
 
 from networks import getresnet18, getbaseresnet18, getmetricresnet18
-from lmdbdataset import lmdbDataset
-from utils import AverageMeter, accuracy, getbasenamewoext
+from lmdbdataset import lmdbDataset, lmdbVideoDataset
+from utils import AverageMeter, accuracy, getbasenamewoext, genfarfrreer
 import os
 from eval.performance import ssan_performances_val
 import shortuuid
@@ -36,7 +36,11 @@ def testmodel(epoch, model, testdbpath, strckptpath):
   elif "244x324" in testdbpath:
     transforms = T.Compose([T.CenterCrop((320, 240)),
                             T.ToTensor()])  # 0 to 1
-  testdataset = lmdbDataset(testdbpath, transforms)
+
+  if "CASIA" in testdbpath or "FASD" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
+    testdataset = lmdbVideoDataset(testdbpath, transforms)
+  else:
+    testdataset = lmdbDataset(testdbpath, transforms)
 
   testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
@@ -52,12 +56,12 @@ def testmodel(epoch, model, testdbpath, strckptpath):
     for idx, imgpathitem in enumerate(imgpath):
       writelist.append("{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
 
-
   for witem in writelist:
     the_file.write(witem)
   the_file.close()
 
   hter = ssan_performances_val(strscorepath)
+  genfarfrreer(strscorepath)
   return hter
 
 
@@ -109,6 +113,7 @@ def testpdlemodel(epoch, model, testdbpath, strckptpath):
   the_file.close()
 
   hter = ssan_performances_val(strscorepath)
+  genfarfrreer(strscorepath)
   return hter
 
 

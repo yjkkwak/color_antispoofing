@@ -22,7 +22,7 @@ class lmdbDatasetwpdle(tdata.Dataset):
     self._init_db()
     self.uuid = {}
     self.factlen = self.env.stat()["entries"]
-    self.len = self.factlen//2
+    self.len = self.factlen//int(5*2)
 
   def _init_db(self):
     self.env = lmdb.open(self.db_path,

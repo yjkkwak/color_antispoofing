@@ -136,10 +136,8 @@ def readscore(scorefile):
   scorelist = []
   for strline in strlines:
     strtokens = strline.split()
-    label = 0
-    if "live" in strtokens[2] or "real" in strtokens[2] or "emotion" in strtokens[2]:
-      label = 1
-    scorelist.append([float(strtokens[0]), float(strtokens[1]), label])
+    label = float(strtokens[0])  # label
+    scorelist.append([float(strtokens[1]), float(strtokens[2]), label])
   the_file.close()
   npscore = np.array(scorelist)
   return npscore
@@ -191,6 +189,12 @@ def genfarfrreerwthlist(scorefile):
     far = np.sum(class_out[:, 1] > thre[i]) / len(class_out)
     tpr = 1.0 - frr
     eer = (frr + far) / 2.0
+
+
+    tmpin = np.where(class_in[:, 1] > thre[i])[0]
+    tmpout = np.where(class_out[:, 1] < thre[i])[0]
+    acc = (len(tmpin) + len(tmpout)) / len(lb)
+
     print("acc {:0.2} / tpr {:0.2} at far {:0.2} / eer {:0.2} thr {:0.2}".format(acc, tpr, far, eer, thre[i]))
 
 def gentprwonlylive(scorefile):
@@ -286,6 +290,11 @@ def genfarfrreer(scorefile):
     far = np.sum(class_out[:, 1] > thre[i]) / len(class_out)
     tpr = 1.0 - frr
     eer = (frr+far)/2.0
+
+    tmpin = np.where(class_in[:, 1] > thre[i])[0]
+    tmpout = np.where(class_out[:, 1] < thre[i])[0]
+    acc = (len(tmpin) + len(tmpout)) / len(lb)
+
     the_file.write("ACC {:0.5} TPR {:0.5} / FAR {:0.5} / EER {:0.5} th {:0.5}\n".format(acc, tpr, far, eer, thre[i]))
   the_file.close()
 
@@ -337,6 +346,10 @@ def genstatistics(evalpath, lastk=10):
 
 if __name__ == '__main__':
   print ("abc")
+  genfarfrreer("/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db_220926_b8eGgziEr8Gc5de3J4wXGP_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/Test_4C1_OULU_1by1_260x260.db/25.score")
+  genfarfrreerwthlist(
+    "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db_220926_b8eGgziEr8Gc5de3J4wXGP_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/Test_4C1_OULU_1by1_260x260.db/25.score")
+  #
   # scorelist = glob.glob("/home/user/model_2022/*/**/*.score", recursive=True)
   # for strscorepath in scorelist:
   #   genfarfrreer(strscorepath)
@@ -394,4 +407,4 @@ if __name__ == '__main__':
   # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_dV2jCRRuqv6mLnEbgSXFxr_lr0.01_gamma_0.92_epochs_80_meta_163264/")
   # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_3uKCX7S9pwbeSTzoTydcgV_lr0.005_gamma_0.92_epochs_80_meta_163264")
   # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_ASjbjf4YXyMBocMLJEFhbS_lr0.01_gamma_0.92_epochs_80_meta_baselineres18/")
-  genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_Pn2ww7BGgZGmhJD5oeG2L6_lr0.005_gamma_0.92_epochs_80_meta_baselineres18")
+  # genstatistics("/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_Pn2ww7BGgZGmhJD5oeG2L6_lr0.005_gamma_0.92_epochs_80_meta_baselineres18")
