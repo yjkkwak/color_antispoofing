@@ -76,21 +76,26 @@ class lmdbDatasetwpdle(tdata.Dataset):
     return img, label, imgpath
 
   def getpairitem(self, index, label):
-    rindex = np.random.randint(0, self.len)
+    reindex = np.random.randint(0, self.factlen)
+    rindex = self.allimgidxs[reindex]
+
 
     while(index == rindex):
-      rindex = np.random.randint(0, self.len)
+      reindex = np.random.randint(0, self.factlen)
+      rindex = self.allimgidxs[reindex]
 
     rimg, rlabel, rimgpath = self.getitem(rindex)
 
     while(label == rlabel or index == rindex):
-      rindex = np.random.randint(0, self.len)
+      reindex = np.random.randint(0, self.factlen)
+      rindex = self.allimgidxs[reindex]
       rimg, rlabel, rimgpath = self.getitem(rindex)
 
     return rimg, rlabel, rimgpath
 
   def __getitem__(self, xindex):
-    index = np.random.randint(0, self.factlen)
+    reindex = np.random.randint(0, self.factlen)
+    index = self.allimgidxs[reindex]
     img, label, imgpath = self.getitem(index)
     rimg, rlabel, rimgpath = self.getpairitem(index, label)
     strtoken = imgpath.split("/")
