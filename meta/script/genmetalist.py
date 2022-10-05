@@ -28,8 +28,11 @@ datapaths = ["/home/user/data1/DBs/antispoofing/SiW/SiW_jpg/",  # Train/Test
              "/home/user/data1/DBs/antispoofing/RECOD-MPAD"  # Train/Test
              ]
 
-testonlydatapaths = ["/home/user/data1/DBs/antispoofing/EvalDB/v0.1",
-                     "/home/user/data1/DBs/antispoofing/RECOD-MPAD"]
+# testonlydatapaths = ["/home/user/data1/DBs/antispoofing/EvalDB/v0.1",
+#                      "/home/user/data1/DBs/antispoofing/RECOD-MPAD",
+#                      "/home/user/data2/s3/CW"]
+
+testonlydatapaths = ["/home/user/data2/s3/CW"]
 
 liveitems = ["/live/", "real"]
 spoofitems = ["/spoof/", "attack"]
@@ -108,23 +111,25 @@ def gentestlist(strver, dbtypes, datacompipaths):
     if "REPLAY" in dbpaths:
       dbnameconcat = "{}_REPLAY".format(dbnameconcat)
 
-    jpgitems = glob.glob("{}/**/*.jpg.fd".format(os.path.join(dbpaths, "{}_jpg".format(dbtypes.lower()))), recursive=True)
-
-    print(len(jpgitems), dbpaths, dbtypes)
-    allimagelist = []
-    allimagelist.extend(jpgitems)
-
-
-    strtrainlist = "./{}_{}{}.list".format(dbtypes, strver, dbnameconcat)
-    with open(strtrainlist, "w") as the_file:
-      for imgpath in allimagelist:
-        the_file.write("{}\n".format(imgpath.replace(".fd","")))
-      the_file.close()
+    # jpgitems = glob.glob("{}/**/*.jpg.fd".format(os.path.join(dbpaths, "{}_jpg".format(dbtypes.lower()))), recursive=True)
+    #
+    # print(len(jpgitems), dbpaths, dbtypes)
+    # allimagelist = []
+    # allimagelist.extend(jpgitems)
+    #
+    #
+    # strtrainlist = "./{}_{}{}.list".format(dbtypes, strver, dbnameconcat)
+    # with open(strtrainlist, "w") as the_file:
+    #   for imgpath in allimagelist:
+    #     the_file.write("{}\n".format(imgpath.replace(".fd","")))
+    #   the_file.close()
 
 
   for dbpaths in testonlydatapaths:
     if "EvalDB" in dbpaths:
       dbnameconcat = "_FASD"
+    elif "CW" in dbpaths:
+      dbnameconcat = "_CW"
     else:
       dbnameconcat = "_RECOD"
 
@@ -141,15 +146,16 @@ def gentestlist(strver, dbtypes, datacompipaths):
     strtrainlist = "./{}_{}{}.list".format(dbtypes, strver, dbnameconcat)
     with open(strtrainlist, "w") as the_file:
       for imgpath in allimagelist:
+        if "mask" in imgpath.lower(): continue
         the_file.write("{}\n".format(imgpath.replace(".fd", "")))
       the_file.close()
 
 
 def main():
   print ("HI")
-  for datacombi in list(combinations(enumerate(data4C3paths), 3)):
-    gentrainlist("4C3", datatypes[0], datacombi, datapaths)
-  # gentestlist("4C1", datatypes[1], data4C3paths)
+  # for datacombi in list(combinations(enumerate(data4C3paths), 3)):
+  #   gentrainlist("4C3", datatypes[0], datacombi, datapaths)
+  gentestlist("4C1", datatypes[1], data4C3paths)
 
 
 if __name__ == '__main__':

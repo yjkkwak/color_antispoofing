@@ -66,11 +66,11 @@ def initargments():
     struuid = os.path.basename(resumedir)
 
   strckptpath = os.path.join(args.ckptpath, struuid)
-  strlogpath = "/home/user/vivaanspace/logworkspace/{}.log".format(struuid)
+  strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
   logger = Logger(strlogpath)
   logger.print(args)
 
-  dbprefix = "/home/user/vivaanspace/work_db/v220922"
+  dbprefix = "/home/user/work_db/v220922"
   if "260x260" in args.lmdbpath:
     testdblist = [
                   os.path.join(dbprefix, "Test_4C1_RECOD_1by1_260x260.db.sort"),

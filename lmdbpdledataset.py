@@ -18,10 +18,13 @@ class lmdbDatasetwpdle(tdata.Dataset):
     self.transform = transform
     self.db_path = db_path
     self.db_path_img = "{}{}".format(self.db_path, ".path")
+    self.allimgidxs = []
+    self.setframes()
+
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
     self.uuid = {}
-    self.factlen = self.env.stat()["entries"]
+    self.factlen = len(self.allimgidxs)  # self.env.stat()["entries"]
     self.len = self.factlen//int(5*2)
 
   def _init_db(self):
@@ -29,6 +32,14 @@ class lmdbDatasetwpdle(tdata.Dataset):
                          readonly=True, lock=False,
                          readahead=False, meminit=False)
     self.txn = self.env.begin()
+
+  def setframes(self):
+    fpath = open(self.db_path_img, "r")
+    strlines = fpath.readlines()
+    for index, strline in enumerate(strlines):
+      strline = strline.strip()
+      if "RECOD" in strline: continue
+      self.allimgidxs.append(index)
 
   def __len__(self):
     return self.len

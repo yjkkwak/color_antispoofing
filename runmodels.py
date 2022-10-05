@@ -14,26 +14,26 @@ def runjobs():
 
   strgpu = 0
   strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_OULU_1by1_260x260.db.sort"
-  #strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_OULU_1by1_260x260.db_220926_Xj64ZccCfPgWULrQBbpisa_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_21.ckpt"
+  # strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_OULU_1by1_260x260.db_220928_mSsJHTZAvCoLtZo66xDhwr_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_last.ckpt"
   send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed, strresume)
 
   strgpu = 1
   strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db.sort"
-  #strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db_220926_b8eGgziEr8Gc5de3J4wXGP_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_21.ckpt"
+  # strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_MSU_REPLAY_1by1_260x260.db_220928_Rw9CboR6RJosJtBq8SYXGT_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_last.ckpt"
   send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed, strresume)
 
   strgpu = 2
   strDB = "Train_4C3_SiW_RECOD_AIHUBx2_CASIA_OULU_REPLAY_1by1_260x260.db.sort"
-  #strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_OULU_REPLAY_1by1_260x260.db_220926_eHsnNDjdsz9oPqqXpMkLTL_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_21.ckpt"
+  # strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_CASIA_OULU_REPLAY_1by1_260x260.db_220928_iJpzWanpLWqQXDqg3h7NtM_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_last.ckpt"
   send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed, strresume)
 
   strgpu = 3
   strDB = "Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db.sort"
-  #strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db_220926_e6RAeWF9LV7xnFoGe2PXxX_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_21.ckpt"
+  # strresume = "/home/user/model_2022/v220922/Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db_220928_Tqr6pZ2P2mJQ8PBUjkvswS_bsize256_optadam_lr0.0001_gamma_0.99_epochs_100_meta_resnet18_adam_binary_lamda_1.0/epoch_last.ckpt"
   send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed, strresume)
 
 def send4C4jobs(strpython, strbaseckpt, strDB, stropti, strlr, strgamma, nepoch, strbsize, strgpu, strseed, strresume):
-  strmeta = "resnet18_{}_binary".format(stropti)
+  strmeta = "woRECOD_resnet18_{}_binary".format(stropti)
   strlogoption = "log_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}".format(strDB,
                                                       stropti,
                                                       "bcls",

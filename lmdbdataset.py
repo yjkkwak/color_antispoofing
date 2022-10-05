@@ -14,10 +14,13 @@ class lmdbDataset(tdata.Dataset):
     self.txn = None
     self.transform = transform
     self.db_path = db_path
+    self.db_path_img = "{}{}".format(self.db_path, ".path")
+    self.allimgidxs = []
+    self.setframes()
     self.mydatum = mydatum_pb2.myDatum()
     self._init_db()
 
-    self.factlen = self.env.stat()["entries"]
+    self.factlen = len(self.allimgidxs)#self.env.stat()["entries"]
     self.len = self.factlen // 5
 
 
@@ -42,11 +45,20 @@ class lmdbDataset(tdata.Dataset):
                          readahead=False, meminit=False)
     self.txn = self.env.begin()
 
+  def setframes(self):
+    fpath = open(self.db_path_img, "r")
+    strlines = fpath.readlines()
+    for index, strline in enumerate(strlines):
+      strline = strline.strip()
+      if "RECOD" in strline: continue
+      self.allimgidxs.append(index)
+
   def __len__(self):
     return self.len#self.env.stat()["entries"]
 
   def __getitem__(self, xindex):
-    index = np.random.randint(0, self.factlen)
+    reindex = np.random.randint(0, self.factlen)
+    index = self.allimgidxs[reindex]
     strid = "{:08}".format(index)
     lmdb_data = self.txn.get(strid.encode("ascii"))
     self.mydatum.ParseFromString(lmdb_data)
@@ -137,11 +149,11 @@ if __name__ == '__main__':
                           T.ToTensor()])  # 0 to 1
 
   #mydataset = lmdbDataset("/home/user/work_db/v220401_01/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260.db", transforms)
-  mydataset = lmdbDataset("/home/user/work_db/v220419_01/Dev_v220419_01_OULUNPU_1by1_260x260.db/",
+  mydataset = lmdbDataset("/home/user/work_db/v220922/Train_4C3_SiW_RECOD_AIHUBx2_MSU_OULU_REPLAY_1by1_260x260.db.sort",
                           transforms)
   trainloader = DataLoader(mydataset, batch_size=256, shuffle=True, num_workers=0, pin_memory=False)
   for item, label, imgpath in trainloader:
     print (item.shape, label.shape, imgpath[0])
-    for iii, fff in enumerate(label):
-      print (fff, imgpath[iii])
-    break
+    # for iii, fff in enumerate(label):
+    #   print (fff, imgpath[iii])
+    # break
