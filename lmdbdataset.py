@@ -23,7 +23,6 @@ class lmdbDataset(tdata.Dataset):
     self.factlen = len(self.allimgidxs)#self.env.stat()["entries"]
     self.len = self.factlen // 5
 
-
     # debug
     # index = 1100
     # strid = "{:08}".format(index)
@@ -73,6 +72,38 @@ class lmdbDataset(tdata.Dataset):
 
     return img, label, imgpath
 
+class lmdbDatasetTest(tdata.Dataset):
+  def __init__(self, db_path, transform=None):
+    self.env = None
+    self.txn = None
+    self.transform = transform
+    self.db_path = db_path
+    self.mydatum = mydatum_pb2.myDatum()
+    self._init_db()
+
+  def _init_db(self):
+    self.env = lmdb.open(self.db_path,
+                         readonly=True, lock=False,
+                         readahead=False, meminit=False)
+    self.txn = self.env.begin()
+
+  def __len__(self):
+    return self.env.stat()["entries"]
+
+  def __getitem__(self, index):
+    strid = "{:08}".format(index)
+    lmdb_data = self.txn.get(strid.encode("ascii"))
+    self.mydatum.ParseFromString(lmdb_data)
+    dst = np.fromstring(self.mydatum.data, dtype=np.uint8)
+    dst = dst.reshape(self.mydatum.height, self.mydatum.width, self.mydatum.channels)
+    img = Image.fromarray(dst)
+    label = self.mydatum.label
+    imgpath = self.mydatum.path
+
+    if self.transform is not None:
+      img = self.transform(img)
+
+    return img, label, imgpath
 
 class lmdbVideoDataset(tdata.Dataset):
   def __init__(self, db_path, transform=None):
