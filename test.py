@@ -88,7 +88,7 @@ def testpdlemodel(epoch, model, testdbpath, strckptpath):
   if "CASIA" in testdbpath or "REPLAY" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
     testdataset = lmdbVideoDataset(testdbpath, transforms)
   else:
-    testdataset = lmdbDataset(testdbpath, transforms)
+    testdataset = lmdbDatasetTest(testdbpath, transforms)
 
   testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
 
