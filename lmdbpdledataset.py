@@ -38,7 +38,7 @@ class lmdbDatasetwpdle(tdata.Dataset):
     strlines = fpath.readlines()
     for index, strline in enumerate(strlines):
       strline = strline.strip()
-      if "RECOD" in strline: continue
+      if "CW" in strline: continue
       self.allimgidxs.append(index)
 
   def __len__(self):

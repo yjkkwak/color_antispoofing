@@ -10,7 +10,7 @@ from torchvision import transforms as T
 from torchvision import models
 from torch.utils.data import DataLoader
 
-from networks import getresnet18, getbaseresnet18, getmetricresnet18
+from networks import getresnet18, getbaseresnet18, getmetricresnet18, getbaseresnet18wgrl
 from lmdbdataset import lmdbDatasetTest, lmdbVideoDataset
 from utils import AverageMeter, accuracy, getbasenamewoext, genfarfrreer
 import os
@@ -42,7 +42,7 @@ def testmodel(epoch, model, testdbpath, strckptpath):
   else:
     testdataset = lmdbDatasetTest(testdbpath, transforms)
 
-  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   probsm = nn.Softmax(dim=1)
@@ -90,7 +90,7 @@ def testpdlemodel(epoch, model, testdbpath, strckptpath):
   else:
     testdataset = lmdbDatasetTest(testdbpath, transforms)
 
-  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+  testloader = DataLoader(testdataset, batch_size=100, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
   writelist = []
@@ -129,7 +129,71 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
   averagemetermap["acc_am"] = AverageMeter()
 
   if model is None:
-    model = getmetricresnet18()
+    # model = getmetricresnet18()
+    # model = getbaseresnet18wgrl(11, 7)
+    model = getresnet18()
+    # model = getbaseresnet18()
+    model = model.cuda()
+
+  checkpoint = torch.load(strckptfilepath)
+  model.load_state_dict(checkpoint['model_state_dict'])
+  epoch = checkpoint['epoch']
+
+  strscorebasepath = os.path.join(strckptpath, getbasenamewoext(os.path.basename(testdbpath)))
+  if os.path.exists(strscorebasepath) == False:
+    os.makedirs(strscorebasepath)
+  strscorepath = "{}/{:02d}.score".format(strscorebasepath, epoch)
+  if os.path.exists(strscorepath):
+    print ("exists {}".format(strscorepath))
+    return
+  the_file = open(strscorepath, "w")
+  if "260x260" in testdbpath:
+    transforms = T.Compose([T.CenterCrop((256, 256)),
+                            T.ToTensor()])  # 0 to 1
+  elif "244x324" in testdbpath:
+    transforms = T.Compose([T.CenterCrop((320, 240)),
+                            T.ToTensor()])  # 0 to 1
+
+  if "CASIA" in testdbpath or "REPLAY" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
+    testdataset = lmdbVideoDataset(testdbpath, transforms)
+  else:
+    testdataset = lmdbDatasetTest(testdbpath, transforms)
+
+  testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0, pin_memory=True)
+
+  model.eval()
+  probsm = nn.Softmax(dim=1)
+  writelist = []
+  for index, (images, labels, imgpath) in enumerate(testloader):
+    images, labels = images.cuda(), labels.cuda()
+    logit = model(images)
+    prob = probsm(logit)
+    acc = accuracy(logit, labels)
+    averagemetermap["acc_am"].update(acc[0].item())
+    for idx, imgpathitem in enumerate(imgpath):
+      writelist.append(
+        "{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(prob[idx][0]), float(prob[idx][1]),
+                                           imgpathitem))
+
+  for witem in writelist:
+    the_file.write(witem)
+  the_file.close()
+
+  hter = ssan_performances_val(strscorepath)
+  genfarfrreer(strscorepath)
+  return hter
+
+
+def testwckpt_wpdle(model, strckptfilepath, testdbpath, strckptpath):
+  """
+  """
+  # print ("test db {} based on {}".format(testdbpath, strckptpath))
+  averagemetermap = {}
+  averagemetermap["acc_am"] = AverageMeter()
+
+  if model is None:
+    # model = getmetricresnet18()
+    model = getbaseresnet18wgrl(11, 7)
     # model = getresnet18()
     # model = getbaseresnet18()
     model = model.cuda()
@@ -148,28 +212,45 @@ def testwckpt(model, strckptfilepath, testdbpath, strckptpath):
   the_file = open(strscorepath, "w")
   if "260x260" in testdbpath:
     transforms = T.Compose([T.CenterCrop((256, 256)),
-                            T.ToTensor()])# 0 to 1
+                            T.ToTensor()])  # 0 to 1
   elif "244x324" in testdbpath:
     transforms = T.Compose([T.CenterCrop((320, 240)),
-                            T.ToTensor()])# 0 to 1
-  testdataset = lmdbDataset(testdbpath, transforms)
+                            T.ToTensor()])  # 0 to 1
 
-  # print(testdataset)
-  testloader = DataLoader(testdataset, batch_size=128, shuffle=False, num_workers=0, pin_memory=True)
+  if "CASIA" in testdbpath or "REPLAY" in testdbpath or "MSU" in testdbpath or "OULU" in testdbpath:
+    testdataset = lmdbVideoDataset(testdbpath, transforms)
+  else:
+    testdataset = lmdbDatasetTest(testdbpath, transforms)
+
+  testloader = DataLoader(testdataset, batch_size=256, shuffle=False, num_workers=0, pin_memory=True)
 
   model.eval()
+  writelist = []
   probsm = nn.Softmax(dim=1)
-
+  regrsteps = torch.linspace(0, 1.0, steps=11).cuda()
   for index, (images, labels, imgpath) in enumerate(testloader):
     images, labels = images.cuda(), labels.cuda()
-    logit,_ = model(images)
+    logit, dislogit = model(images)
     prob = probsm(logit)
-    acc = accuracy(logit, labels)
+    expectprob = torch.sum(regrsteps * prob, dim=1)
+    map_score = expectprob.detach().cpu().numpy()
+    tmplogit = torch.zeros(images.size(0), 2).cuda()
+    tmplogit[:, 1] = torch.from_numpy(map_score)
+    tmplogit[:, 0] = 1.0 - tmplogit[:, 1]
+
+    acc = accuracy(tmplogit, labels)
     averagemetermap["acc_am"].update(acc[0].item())
     for idx, imgpathitem in enumerate(imgpath):
-      the_file.write("{:.5f} {:.5f} {}\n".format(float(prob[idx][0]), float(prob[idx][1]), imgpathitem))
+      writelist.append("{:.5f} {:.5f} {:.5f} {}\n".format(labels[idx].detach().cpu().numpy(), float(tmplogit[idx][0]),
+                                                          float(tmplogit[idx][1]), imgpathitem))
+
+  for witem in writelist:
+    the_file.write(witem)
   the_file.close()
 
+  hter = ssan_performances_val(strscorepath)
+  genfarfrreer(strscorepath)
+  return hter
 
 
 
@@ -178,7 +259,7 @@ if __name__ == '__main__':
   # parser.add_argument('--ckptpath', type=str,
   #                     default='/home/user/model_2022', help='ckpt path')
   # parser.add_argument('--batch_size', type=int, default=512, help='batch_size')
-  parser.add_argument('--GPU', type=int, default=0, help='specify which gpu to use')
+  parser.add_argument('--GPU', type=int, default=1, help='specify which gpu to use')
   # parser.add_argument('--works', type=int, default=4, help='works')
   args = parser.parse_args()
   os.environ["CUDA_VISIBLE_DEVICES"] = "{}".format(args.GPU)  # Set the GPU to use
@@ -187,8 +268,7 @@ if __name__ == '__main__':
   #testmodel(1, None, "/home/user/work_db/v220401_01/test_LDRGB_LD3007_1by1_260x260.db", "/home/user/model_2022/Train_v220401_01_CelebA_LDRGB_LD3007_1by1_260x260_220407_G7gw5DGP2Z9oppqtU3DP9a")
 
 
-  testdblist = ["/home/user/work_db/v220419_01/Test_v220419_01_SiW_1by1_260x260.db",
-                "/home/user/work_db/v220419_01/Test_v220419_01_CelebA_1by1_260x260.db",]
+  testdblist = ["/home/user/work_db/v220922/Test_4C0_RECOD_4by3_244x324.db.sort"]
                 # "/home/user/work_db/v220401_01/Test_v220401_01_LD3007_1by1_260x260.db",
                 # "/home/user/work_db/v220401_01/Test_v220401_01_LDRGB_1by1_260x260.db"]
 
@@ -210,20 +290,21 @@ if __name__ == '__main__':
   # basepathlist = [
   #   "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_eNeMv72oynyYhUikgY4mbv_lr0.001_gamma_0.92_epochs_80_meta_163264/", ]
 
-  basepathlist = [
-    "/home/user/model_2022/v220513_01/Train_v220419_01_OULUNPU_1by1_260x260_220516_8Rp9ySyYyJDeU7Xd9VUvG3_lr0.005_gamma_0.88_epochs_31_meta_arcloss163264_e31/",
-    "/home/user/model_2022/v220513_01/Train_v220419_01_OULUNPU_1by1_260x260_220516_fpbpBLcjDqdwGTv2L8MAF6_lr0.005_gamma_0.88_epochs_31_meta_arcloss163264_e31/",
-    "/home/user/model_2022/v220513_01/Train_v220419_01_OULUNPU_1by1_260x260_220516_mpn9YvQZW7YgnDgGrWAp5N_lr0.005_gamma_0.88_epochs_31_meta_arcloss163264_e31/"]
+  basepathlist = ["/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_UNnaHEdifqijaML6w6uS3W_lr0.005_gamma_0.92_epochs_80_meta_163264/"]
+  # strckpt_p1 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_1by1_260x260_220510_XWtdsCV5xfQ28a8PLyYYke_lr0.005_gamma_0.92_epochs_80_meta_163264/epoch_72.ckpt"
+  # strckpt_p2 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_UNnaHEdifqijaML6w6uS3W_lr0.005_gamma_0.92_epochs_80_meta_163264/epoch_65.ckpt"
 
   for basepath in basepathlist:
     ckptlist = glob.glob("{}/**/*.ckpt".format(basepath), recursive=True)
     for ckptpath in ckptlist:
       for testdbpath in testdblist:
         ffff = getbasenamewoext(ckptpath)
-        #if int(ffff[-2:]) > 58:
-        print (ffff)
-        testwckpt(None,
-                  ckptpath,
-                  testdbpath,
-                  basepath)
+        if "last" in ffff:
+          continue
+        if (int(ffff[-2:]) == 65):
+          print(ffff[-2:])
+          testwckpt(None,
+                    ckptpath,
+                    testdbpath,
+                    basepath)
 

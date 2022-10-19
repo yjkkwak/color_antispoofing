@@ -66,26 +66,19 @@ def initargments():
     struuid = os.path.basename(resumedir)
 
   strckptpath = os.path.join(args.ckptpath, struuid)
-  strlogpath = "/home/user/vivaanspace/logworkspace/{}.log".format(struuid)
+  strlogpath = "/home/user/work_2022/logworkspace/{}.log".format(struuid)
   logger = Logger(strlogpath)
   logger.print(args)
 
-  dbprefix = "/home/user/vivaanspace/work_db/v220922"
+  dbprefix = "/home/user/work_db/v220922"
   if "260x260" in args.lmdbpath:
     testdblist = [
-                  os.path.join(dbprefix, "Test_4C1_RECOD_1by1_260x260.db.sort"),
-                  os.path.join(dbprefix, "Test_4C1_FASD_1by1_260x260.db.sort")]
+      os.path.join(dbprefix, "Test_4C0_RECOD_1by1_260x260.db.sort")]
+  elif "244x324" in args.lmdbpath:
+    testdblist = [
+      os.path.join(dbprefix, "Test_4C0_RECOD_4by3_244x324.db.sort")]
 
-  if "CASIA_MSU_OULU" in args.lmdbpath:
-    testdblist.append(os.path.join(dbprefix, "Test_4C1_REPLAY_1by1_260x260.db.sort"))
-  elif "CASIA_MSU_REPLAY" in args.lmdbpath:
-    testdblist.append(os.path.join(dbprefix, "Test_4C1_OULU_1by1_260x260.db.sort"))
-  elif "CASIA_OULU_REPLAY" in args.lmdbpath:
-    testdblist.append(os.path.join(dbprefix, "Test_4C1_MSU_1by1_260x260.db.sort"))
-  elif "MSU_OULU_REPLAY" in args.lmdbpath:
-    testdblist.append(os.path.join(dbprefix, "Test_4C1_CASIA_1by1_260x260.db.sort"))
-
-  print (testdblist)
+  print(testdblist)
 
   # set args with external variables.
   args.struuid = struuid
@@ -95,7 +88,6 @@ def initargments():
 
   print (args)
   return args
-
 
 
 def main():
@@ -173,6 +165,7 @@ def trainmodel(args):
   epochtimer = Timer()
 
   mynet = getbaseresnet18wgrl(11, 7)
+
   mynet = mynet.cuda()
 
   if "260x260" in args.lmdbpath:
@@ -235,7 +228,7 @@ def trainmodel(args):
         besthter = sumhter
         save_ckpt(args, epoch, mynet, optimizer)
         copyfile(args.logger.getlogpath(), "{}/trainlog.txt".format(args.strckptpath))
-    # last ckpt
+    # lastckpt
     save_ckpt(args, epoch, mynet, optimizer, True)
 
 if __name__ == '__main__':

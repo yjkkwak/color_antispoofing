@@ -105,11 +105,24 @@ def genpatch(imgpath):
     # print ("fd format is not collect, do fd again {}".format(imgpath))
     return None
   x, y, w, h = int(strtokens[0]), int(strtokens[1]), int(strtokens[2]), int(strtokens[3])
-  # 256 x 256 from 260 x 260
-  ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "1by1", imgpath)
-  if ecode1 < 1:
-    # print ("gen patch error code 1by1:{} ".format(ecode1))
-    return None
+
+
+  if "Train" in args. listpath:
+    if "1by1" in args.patchtype:
+      # 256 x 256 from 260 x 260
+      ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "1by1", imgpath)
+    else:
+      ecode1, x_4by3, y_4by3, w_4by3, h_4by3 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "4by3", imgpath)
+
+    if ecode1 < 1:
+      # print ("gen patch error code 1by1:{} ".format(ecode1))
+      return None
+  else:
+    ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "1by1", imgpath)
+    ecode2, x_4by3, y_4by3, w_4by3, h_4by3 = genXbyYcorrdinate(x, y, w, h, pilimg.width, pilimg.height, "4by3", imgpath)
+    if ecode1 + ecode2 < 2:
+      # print ("gen patch error code 1by1:{} 4by3:{}".format(ecode1, ecode2))
+      return None
 
 
   # 240 x 320 from 244 x 324
@@ -189,7 +202,7 @@ def genmydatum(imgpath):
   mydatum.height = npimg.shape[0]  # im.height
   mydatum.channels = npimg.shape[2]
   mydatum.label = 0
-  if "live" in imgpath or "real" in imgpath or "emotion" in imgpath:
+  if "/live/" in imgpath.lower() or "real" in imgpath.lower():
     mydatum.label = 1
   mydatum.data = npimg.tobytes()
   mydatum.path = imgpath

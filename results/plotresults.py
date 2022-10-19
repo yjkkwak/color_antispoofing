@@ -8,6 +8,12 @@ from utils import readscore
 import matplotlib
 import matplotlib.pyplot as plt
 
+CB91_Blue = '#2CBDFE'
+CB91_Green = '#47DBCD'
+CB91_Pink = '#F3A0F2'
+CB91_Purple = '#9D2EC5'
+CB91_Violet = '#661D98'
+CB91_Amber = '#F5B14C'
 
 def drawplotwonlytpr(TPR1, THR1, TPR2, THR2, TPR3, THR3, strtestdb):
   fig = plt.figure()
@@ -27,6 +33,36 @@ def drawplotwonlytpr(TPR1, THR1, TPR2, THR2, TPR3, THR3, strtestdb):
   fig.subplots_adjust(top=0.88)
 
   plt.savefig("./{}.png".format(strtestdb))
+
+
+def drawplotXY(Xs, Ys, Ys2, Xlb, Ylb, Ylb2, clist, lnstyles=['r', 'r--'], lnstyles2=['r', 'r--'], lnlabels=['old','new']):
+
+  # fig = plt.figure(figsize=(12, 7))
+  ax = plt.subplot(1, 1, 1)# rows, cols, index
+
+  for idx, _ in enumerate(Xs):
+    ax.plot(Xs[idx], Ys[idx], color=clist[idx], linestyle=lnstyles[idx], label="FAR_"+lnlabels[idx])
+  ax.set_xlabel(Xlb)
+  ax.set_ylabel(Ylb)
+  ax2=ax.twinx()
+
+  for idx, _ in enumerate(Xs):
+    ax2.plot(Xs[idx], Ys2[idx], color=clist[idx], linestyle=lnstyles2[idx], label="FRR_"+lnlabels[idx])
+  ax2.set_ylabel(Ylb2)
+
+
+  ax.set_xlim([0.0, 1.0])
+  ax.set_ylim([0.0, 0.2])
+  ax2.set_ylim([0.0, 0.2])
+  ax.legend(loc='upper left', fontsize=10)
+  ax2.legend(loc='upper right', fontsize=10)
+  # plt.tight_layout()
+  # #fig.suptitle(strtestdb)
+  #fig.subplots_adjust(top=0.99)
+  plt.savefig("./pdle.pdf")
+  # plt.show()
+
+
 
 def drawplotwvalue(FAR1, FRR1, TPR1, EER1, THR1, FAR2, FRR2, TPR2, EER2, THR2, strtestdb):
   fig = plt.figure()
@@ -228,10 +264,12 @@ def getfarfrreer(scorefile):
     EER.append(eer)
     THR.append(thre[i])
     print ("ACC {:0.5} TPR {:0.5} / FAR {:0.5} / EER {:0.5} th {:0.5}".format(acc, tpr, far, eer, thre[i]))
-
+  print ("")
+  inter_tprwfar = interpolate.interp1d(FAR, TPR, fill_value='extrapolate')
+  print ("TPR {} at FAR 0.1, TPR {} at FAR 0.05, TPR {} at FAR 0.02".format(inter_tprwfar(0.1)*100, inter_tprwfar(0.05)*100, inter_tprwfar(0.02)*100))
   return FAR, FRR, TPR, EER, THR
   # interpolation.. soon
-  # inter_tprwfar = interpolate.interp1d(FAR, TPR, fill_value='extrapolate')
+
   # inter_tprwthr = interpolate.interp1d(THR, TPR, fill_value='extrapolate')
   # inter_eerwthr = interpolate.interp1d(THR, EER, fill_value='extrapolate')
 
@@ -260,6 +298,34 @@ def gettpronly(scorefile):
     THR.append(thre[i])
 
   return TPR, THR
+
+def rundrawplot_1014():
+  # old
+  strmodelpathforamt1_old = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_1by1_260x260_220510_XWtdsCV5xfQ28a8PLyYYke_lr0.005_gamma_0.92_epochs_80_meta_163264/Test_4C0_RECOD_1by1_260x260.db/72.score"
+  # strmodelpathforamt1_old = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_UNnaHEdifqijaML6w6uS3W_lr0.005_gamma_0.92_epochs_80_meta_163264/Test_4C0_RECOD_4by3_244x324.db/65.score"
+  #
+  #
+  strmodelpathforamt1_newbase = "/home/user/model_2022/v220922/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_1by1_260x260.db_221010_ifUcCDxJv533hBgeYAvV3C_bsize256_optadam_lr0.0001_gamma_0.99_epochs_80_meta_woCW_resnet18_adam_binary_lamda_1.0/Test_4C0_RECOD_1by1_260x260.db/18.score"
+  # strmodelpathforamt1_newbase = "/home/user/model_2022/v220922/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_4by3_244x324.db_221010_LoDzPYZubka3wyJej2JUBA_bsize256_optadam_lr0.0001_gamma_0.99_epochs_80_meta_woCW_resnet18_adam_binary_lamda_1.0/Test_4C0_RECOD_4by3_244x324.db/21.score"
+
+  # strmodelpathforamt1_pdle = "/home/user/model_2022/v220922_pdle/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_1by1_260x260.db_221011_YDWLULy5cKpPRHbzGSdFNk_bsize128_optadam_lr1e-05_gamma_0.99_epochs_100_meta_woCW_resnet18_adam_pdle_lamda_1.0/Test_4C0_RECOD_1by1_260x260.db/51.score"
+  strmodelpathforamt1_pdle = "/home/user/model_2022/v220922_pdle/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_1by1_260x260.db_221014_7Ka6RguFhyzCYsamxtZZw7_bsize128_optadam_lr1e-05_gamma_0.99_epochs_100_meta_woCW_resnet18_adam_pdle_lamda_1.0/Test_4C0_RECOD_1by1_260x260.db/45.score"
+  #
+  # strmodelpathforamt1_pdle = "/home/user/model_2022/v220922_pdle/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_4by3_244x324.db_221011_3692NUKAZCwmQbeLCotFE5_bsize128_optadam_lr1e-05_gamma_0.99_epochs_100_meta_woCW_resnet18_adam_pdle_lamda_1.0/Test_4C0_RECOD_4by3_244x324.db/78.score"
+
+  FAR1, FRR1, TPR1, EER1, THR1 = getfarfrreer(strmodelpathforamt1_old)
+  FAR2, FRR2, TPR2, EER2, THR2 = getfarfrreer(strmodelpathforamt1_newbase)
+  FAR3, FRR3, TPR3, EER3, THR3 = getfarfrreer(strmodelpathforamt1_pdle)
+
+  # CB91_Blue = '#2CBDFE'
+  # CB91_Green = '#47DBCD'
+  # CB91_Pink = '#F3A0F2'
+  # CB91_Purple = '#9D2EC5'
+  # CB91_Violet = '#661D98'
+  # CB91_Amber = '#F5B14C'
+
+  drawplotXY([THR1, THR2, THR3], [FAR1, FAR2, FAR3], [FRR1, FRR2, FRR3], 'THR', 'FAR', 'FRR', [CB91_Blue,CB91_Pink, CB91_Amber], lnstyles=['-', '-', '-'], lnstyles2=['--', '--', '--'], lnlabels=['release_06','baseline_10', 'pdle'])
+
 
 def rundrawplot2():
   strmodelpathforamt1 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_1by1_260x260_220502_3uKCX7S9pwbeSTzoTydcgV_lr0.005_gamma_0.92_epochs_80_meta_163264/{}_v220419_01_{}/78.score"
@@ -319,4 +385,5 @@ def rundrawplot():
 
 if __name__ == '__main__':
   #rundrawplot()
-  rundrawplot2()
+  # rundrawplot2()
+  rundrawplot_1014()

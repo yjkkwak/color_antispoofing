@@ -1,7 +1,7 @@
 from PIL import Image, ImageOps
 import torch
 import torch.nn as nn
-from networks import getresnet18, getbaseresnet18
+from networks import getbaseresnet18, getbaseresnet18wgrl
 import os
 import numpy as np
 import cv2
@@ -19,11 +19,14 @@ class KABANGFASEngine:
     self.resize_p2 = (244, 324)
     self.centorcrop_p1 = (256, 256)
     self.centorcrop_p2 = (320, 240)
-    self.model_p1 = getresnet18()
-    self.model_p2 = getresnet18()
+    self.model_p1 = getbaseresnet18()
+    self.model_p2 = getbaseresnet18()
+    self.pdleK = 11
+    self.model_pdle_p1 = getbaseresnet18wgrl(self.pdleK, 7)
     self.probsm = nn.Softmax(dim=1)
+    self.regrsteps = torch.linspace(0, 1.0, steps=self.pdleK)
 
-  def loadckpt(self, strckpt_p1, strckpt_p2):
+  def loadckpt(self, strckpt_p1, strckpt_p2, strckpt_pdle_p1):
     checkpoint = torch.load(strckpt_p1)
     self.model_p1.load_state_dict(checkpoint['model_state_dict'], strict=True)
     self.model_p1.eval()
@@ -31,6 +34,10 @@ class KABANGFASEngine:
     checkpoint = torch.load(strckpt_p2)
     self.model_p2.load_state_dict(checkpoint['model_state_dict'], strict=True)
     self.model_p2.eval()
+
+    checkpoint = torch.load(strckpt_pdle_p1)
+    self.model_pdle_p1.load_state_dict(checkpoint['model_state_dict'], strict=True)
+    self.model_pdle_p1.eval()
 
   def deploy(self, t_input_p1, t_input_p2):
     logit = self.model_p1(t_input_p1)
@@ -40,6 +47,13 @@ class KABANGFASEngine:
     logit = self.model_p2(t_input_p2)
     prob = self.probsm(logit)
     print("patch2 score spoof {:.7f} vs real {:.7f}".format(float(prob[0][0]), float(prob[0][1])))
+
+    logit, _ = self.model_pdle_p1(t_input_p1)
+    prob = self.probsm(logit)
+    expectprob = torch.sum(self.regrsteps * prob, dim=1)
+    expectprob = expectprob.detach().numpy()
+    print("patch1 pdle expected score spoof {:.7f} vs real {:.7f}".format(1.0-float(expectprob), float(expectprob)))
+
 
   def genpatch2tensor(self, pilimg, fdbox):
     ecode1, x_1by1, y_1by1, w_1by1, h_1by1 = self.genXbyYcorrdinate(fdbox, pilimg.width, pilimg.height, "1by1")
@@ -218,11 +232,12 @@ def loadimgandld(strtestimg):
 
 
 def deploycolorfas():
-  strckpt_p1 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_OULUNPU_1by1_260x260_220510_XWtdsCV5xfQ28a8PLyYYke_lr0.005_gamma_0.92_epochs_80_meta_163264/epoch_72.ckpt"
-  strckpt_p2 = "/home/user/model_2022/v220419_01/Train_v220419_01_CelebA_SiW_LDRGB_LD3007_4by3_244x324_220504_UNnaHEdifqijaML6w6uS3W_lr0.005_gamma_0.92_epochs_80_meta_163264/epoch_65.ckpt"
-  #
+  strckpt_p1 = "/home/user/model_2022/v220922/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_1by1_260x260.db_221010_ifUcCDxJv533hBgeYAvV3C_bsize256_optadam_lr0.0001_gamma_0.99_epochs_80_meta_woCW_resnet18_adam_binary_lamda_1.0/epoch_18.ckpt"
+  strckpt_p2 = "/home/user/model_2022/v220922/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_4by3_244x324.db_221010_LoDzPYZubka3wyJej2JUBA_bsize256_optadam_lr0.0001_gamma_0.99_epochs_80_meta_woCW_resnet18_adam_binary_lamda_1.0/epoch_21.ckpt"
+  strckpt_pdle_p1 = "/home/user/model_2022/v220922_pdle/Train_4C4_SiW_CW_AIHUBx2_CASIA_MSU_OULU_REPLAY_1by1_260x260.db_221014_7Ka6RguFhyzCYsamxtZZw7_bsize128_optadam_lr1e-05_gamma_0.99_epochs_100_meta_woCW_resnet18_adam_pdle_lamda_1.0/epoch_45.ckpt"
+
   ######################## Test Sample
-  strtestimg = "/home/user/data1/DBs/antispoofing/koran_emotion_aihub/Test/Val_Wound/5c3c59929f985bbf2c0776e6d3e941ff5f2d298acdadaef076f627c2952024d5__20___20210202143415-001-002.jpg"
+  strtestimg = "/home/user/data1/DBs/antispoofing/RECOD-MPAD/Test/attack/cce/motog5/user_01/01_01_01_03/01_01_01_03_0001.jpg"
 
   ### passed by interface ###
   pilimg, fdbox = loadimgandfd(strtestimg)
@@ -230,7 +245,7 @@ def deploycolorfas():
   ### Init Color based Engine ####
   kfse = KABANGFASEngine()
   ### Load Models ####
-  kfse.loadckpt(strckpt_p1, strckpt_p2)
+  kfse.loadckpt(strckpt_p1, strckpt_p2, strckpt_pdle_p1)
   ### Gen Patchs according to models ####
   errcode, t_p1, t_p2 = kfse.genpatch2tensor(pilimg, fdbox)
   if errcode == -1:
@@ -259,4 +274,4 @@ if __name__ == '__main__':
 
   # color fas
   deploycolorfas()
-  deployexprfas()
+  # deployexprfas()
